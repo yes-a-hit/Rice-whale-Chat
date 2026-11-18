@@ -17,6 +17,7 @@ import {
   setSendSafetyCheck,
   setSamplingParam,
   setSkin,
+  setThemeAuto,
   setSystemPrompt,
   setThinking,
   setTtsRate,
@@ -27,7 +28,8 @@ import {
   type AsrEngine,
   type UiMode,
 } from '../../services/settings.js'
-import { SKINS, type SkinId } from '../../app/skins.js'
+import { isThemeId, THEMES } from '../../app/themes/registry.js'
+import type { ThemeId } from '../../app/themes/types.js'
 import { SettingCell } from './SettingCell.js'
 import { CharacterCardSetting } from './CharacterCardSetting.js'
 import styles from './Ext.module.css'
@@ -285,23 +287,40 @@ const GenerationSettings = () => {
 const AppearanceSettings = () => {
   const t = useTranslate()
   const skin = useSettings((state) => state.skin)
+  const themeAuto = useSettings((state) => state.themeAuto)
   const fontScale = useSettings((state) => state.fontScale)
   return (
     <>
       <SettingCell
-        label={t('odsSkin')}
-        description={t('odsSkinHint')}
+        label={t('odsTheme')}
+        description={t('odsThemeHint')}
         status={null}
         action={
-          <Select<SkinId>
-            ariaLabel={t('odsSkin')}
-            value={(SKINS.some((item) => item.id === skin) ? skin : 'deepseek') as SkinId}
-            options={SKINS.map((item) => ({
+          <Select<ThemeId>
+            ariaLabel={t('odsTheme')}
+            value={isThemeId(skin) ? skin : 'plain'}
+            options={THEMES.map((item) => ({
               value: item.id,
-              label: t(item.labelKey),
+              label: t(item.nameKey),
             }))}
             onChange={setSkin}
           />
+        }
+      />
+      <SettingCell
+        label={t('odsThemeAuto')}
+        description={t('odsThemeAutoHint')}
+        status={null}
+        action={
+          <button
+            type="button"
+            role="switch"
+            aria-checked={themeAuto}
+            className={clsx(styles.switch, themeAuto && styles.switchOn)}
+            onClick={() => setThemeAuto(!themeAuto)}
+          >
+            <span className={styles.switchThumb} />
+          </button>
         }
       />
       <SettingCell

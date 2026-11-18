@@ -44,6 +44,8 @@ type Settings = {
   systemPrompt: string
   /** 皮肤 id */
   skin: string
+  /** 跟随接口自动换主题（kimi → 月兔，glm → 奶牛） */
+  themeAuto: boolean
   /** 界面字号倍数，lite 模式默认放大 */
   fontScale: number
   /** 朗读引擎 */
@@ -84,7 +86,7 @@ type Settings = {
 /** 官方默认系统提示词，与 chat-demo 一致 */
 export const DEFAULT_API_BASE_URL = 'https://api.deepseek.com'
 export const DEFAULT_SYSTEM_PROMPT = '该助手为DeepSeek，由深度求索公司创造。'
-export const DEFAULT_SKIN = 'deepseek'
+export const DEFAULT_SKIN = 'plain'
 export const DEFAULT_IMAGE_BASE_URL = 'https://api.openai.com/v1'
 export const DEFAULT_IMAGE_MODEL = 'gpt-image-1'
 
@@ -102,6 +104,7 @@ const KEYS = {
   apiBaseUrl: 'ods:api-base-url',
   systemPrompt: 'ods:system-prompt',
   skin: 'ods:skin',
+  themeAuto: 'ods:theme-auto',
   fontScale: 'ods:font-scale',
   ttsEngine: 'ods:tts-engine',
   computeDevice: 'ods:compute-device',
@@ -258,6 +261,7 @@ export const useSettings = create<Settings>(() => ({
   apiBaseUrl: initialApiBaseUrl(),
   systemPrompt: read(KEYS.systemPrompt) ?? '',
   skin: read(KEYS.skin) ?? DEFAULT_SKIN,
+  themeAuto: read(KEYS.themeAuto) === 'true',
   fontScale: initialFontScale(),
   ttsEngine: initialTtsEngine(),
   computeDevice: initialComputeDevice(),
@@ -374,6 +378,11 @@ export const setShowBalance = (showBalance: boolean) => {
 export const setSystemPrompt = (systemPrompt: string) => {
   write(KEYS.systemPrompt, systemPrompt)
   useSettings.setState({ systemPrompt })
+}
+
+export const setThemeAuto = (themeAuto: boolean) => {
+  write(KEYS.themeAuto, String(themeAuto))
+  useSettings.setState({ themeAuto })
 }
 
 export const setSkin = (skin: string) => {

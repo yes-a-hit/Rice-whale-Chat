@@ -91,7 +91,7 @@ export const AssistantMessage = memo(function AssistantMessage({
       ) : notice ? (
         <div className={styles.notice}>
           {notice.action === 'topUp' ? (
-            <img className={styles.noticeArt} src="/media/wait.png" alt="" aria-hidden />
+            <img className={styles.noticeArt} src="/media/wait.webp" alt="" aria-hidden />
           ) : (
             <IconWarningOutline16 />
           )}

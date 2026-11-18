@@ -1,6 +1,8 @@
 import { useIsMobile } from '../../app/viewport.js'
 import { useTranslate } from '../../i18n/index.js'
 import { useSettings } from '../../services/settings.js'
+import { selectTheme } from '../../app/skins.js'
+import { themeAsset } from '../../app/themes/registry.js'
 import { openSettings } from '../settings/settingsDialogState.js'
 import { ChatInput } from '../chatInput/ChatInput.js'
 import { MobileHeader } from './MobileHeader.js'
@@ -11,6 +13,7 @@ export const Welcome = () => {
   const t = useTranslate()
   const isMobile = useIsMobile()
   const hasApiKey = useSettings((state) => Boolean(state.apiKey))
+  const theme = useSettings(selectTheme)
   return (
     <div className={styles.container}>
       {isMobile ? <MobileHeader /> : null}
@@ -18,7 +21,7 @@ export const Welcome = () => {
         <div className={styles.mascot}>
           <img
             className={styles.mascotImage}
-            src={hasApiKey ? '/media/welcome.png' : '/media/hungry.png'}
+            src={themeAsset(theme, hasApiKey ? 'welcome' : 'hungry')}
             alt={hasApiKey ? t('appName') : t('odsBalanceNoKey')}
             draggable={false}
           />

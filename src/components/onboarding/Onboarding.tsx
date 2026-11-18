@@ -21,7 +21,7 @@ export const Onboarding = () => {
   return (
     <div className={styles.overlay} role="dialog" aria-modal="true" aria-label={t('odsOnboardTitle')}>
       <div className={styles.panel}>
-        <img className={styles.logo} src="/media/logo-128.png" alt="" draggable={false} />
+        <img className={styles.logo} src="/media/logo-128.webp" alt="" draggable={false} />
         <h1 className={styles.title}>{t('odsOnboardTitle')}</h1>
         <p className={styles.subtitle}>{t('odsOnboardSubtitle')}</p>
         <div className={styles.cards}>

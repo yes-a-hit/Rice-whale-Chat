@@ -4,7 +4,7 @@ import { setupAppearance } from './app/skins.js'
 import { setupTheme } from './app/theme.js'
 import { ensureKatex } from './services/markdown/katex.js'
 import './app/theme.css'
-import './app/skins.css'
+import './app/themes/themes.css'
 import './app/global.css'
 
 ensureKatex()
