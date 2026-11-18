@@ -1,75 +1,197 @@
-# chat-demo
+# Open DeepSeek
 
-English | [简体中文](README.zh-CN.md)
+基于 [`deepseek-ai/chat-demo`](https://github.com/deepseek-ai/chat-demo)（MIT）改造的手机端聊天应用，用 Capacitor 打成 APK。
 
-A static chat demo powered by the DeepSeek API. No application backend is required: the browser connects directly to the configured API service.
+两个模式共用同一份密钥与聊天记录，随时在「设置 → 扩展」里切换。
 
-You can [try the app online](https://deepseek-ai.github.io/chat-demo/) or download the archive from [Releases](https://github.com/deepseek-ai/deepseek-chat-demo/releases), extract it, and double-click `index.html` to use it locally without installation or a build. Enter your API key in Settings before your first chat.
+| | **Lite（老登模式）** | **Plus（重度模式）** |
+|---|---|---|
+| 界面 | 字号放大、隐藏深度思考/搜索开关 | 完整功能 |
+| 朗读 | 回复完成后自动朗读（可在设置里换引擎） | 手动点小喇叭 |
+| 系统提示词 | 官方默认 | 可编辑 / 导入角色卡 |
+| 皮肤 | 跟随系统深浅 | 5 套主色可选 |
+| 生图 | 无 | BYOK 云端生图 |
+| 用量计费 | — | 输入框下方实时显示 token、缓存命中、金额、上下文占用 |
 
-## Getting started
+## 安装
 
-Install Node.js 22.12+ and pnpm, then run:
-
-```sh
-git clone https://github.com/deepseek-ai/chat-demo.git
-cd chat-demo
+```powershell
+cd E:\flutter\open-deepseek
 pnpm install
-pnpm dev
+pnpm android:apk
 ```
 
-Open http://localhost:8090.
+产物：`android/app/build/outputs/apk/debug/app-debug.apk`（约 6 MB）
 
-To build the static site:
+装到手机：
 
-```sh
-pnpm build
+```powershell
+adb install -r android\app\build\outputs\apk\debug\app-debug.apk
 ```
 
-The output is written to `dist/`. Deploy it to a static web server or open `dist/index.html` directly. Opening the file directly requires browser support for storage on `file://` pages and an API service that permits their cross-origin requests.
+或者把 APK 拷进手机点击安装（首次需允许「安装未知来源应用」）。
 
-## Features
+## 首次使用
 
-- Multiple conversations with automatic titles, renaming, and deletion; edit prompts, regenerate replies, and switch between message branches.
-- Streaming replies, deep thinking, smart search, link reading, and source citations; stop generation or continue eligible replies.
-- Upload, paste, or drag and drop attachments; use voice input and read replies aloud. A live audio spectrum appears in the first row of the input area while recording on mobile.
-- Markdown, syntax highlighting, KaTeX math, and Mermaid diagrams.
-- Simplified Chinese and English, light and dark themes, mobile layouts, location settings, and chat history import and export.
+1. 打开应用 → 选 **Lite** 或 **Plus**
+2. 左下角头像 → 设置 → **数据管理** → 填 DeepSeek API Key
+3. 手机没连外网/用中转时，到「扩展 → 聊天服务地址」改成你自己的地址（默认 `https://api.deepseek.com`）
 
-## Data and storage
+## 给长辈用（Lite）
 
-Your API key and settings are stored in the browser's localStorage. Conversations and original attachments are stored in IndexedDB. Local data is isolated by browser profile and site origin. Sending messages, uploading attachments, and using speech features sends the relevant content to the configured API service.
+- 选 Lite 后字号自动放大 15%，输入区的「深度思考 / 联网搜索」开关隐藏
+- 每回答完一条会自动朗读；不想听就在回复下方点停止，或在「扩展 → 朗读引擎」换引擎
+- 语音提问用输入框右侧的麦克风（走手机自带听写，不花 token）
+- 聊天记录存在手机本地，不上传
 
-History import and export in Settings use ZIP archives. After confirmation and successful validation, importing replaces all local conversations and attachments. Exports include conversations and locally available original images, but exclude API keys, settings, and original non-image attachments. See the [history import/export documentation (Chinese)](src/services/chat/history/README.md) for the archive format and preservation details.
+## Plus 功能
 
-Settings → Data → Delete all chats clears all local conversations, original attachments, and unsent drafts after confirmation. It stops ongoing replies and returns to a new chat. Your API key and settings are preserved; files already uploaded to the API service are not deleted.
+- **系统提示词**：扩展 → 系统提示词，保存后对新回复立即生效
+- **角色卡**：支持 chara card v2 的 JSON 或内嵌数据的 PNG（SillyTavern 导出的那种），导入后自动拼成系统提示词
+- **皮肤**：DeepSeek 蓝 / 海蓝 / 樱粉 / 森林 / 石墨，只改主色阶
+- **生图**：输入框的图片按钮，填 OpenAI 兼容的 `/images/generations` 服务（服务地址 + Key + 模型名）
 
-## Development
+## 本地模型
 
-| Command       | Description                  |
-| ------------- | ---------------------------- |
-| `pnpm dev`    | Start the development server |
-| `pnpm build`  | Build into `dist/`           |
-| `pnpm type`   | Run TypeScript type checks   |
-| `pnpm lint`   | Lint with oxlint             |
-| `pnpm format` | Format with oxfmt            |
+扩展 → 本地模型：
 
-[rspack.config.ts](rspack.config.ts) uses `https://api.deepseek.com` by default. Use `createConfig({ apiOrigin, devServer })` to customize the API origin and development server proxy.
+- **下载源**：`hf-mirror`（国内推荐）/ `HuggingFace` / `Kaggle` / 手动导入
+- 下载的文件存在 CacheStorage，断网可用；删除即释放
+- 目前清单：Kokoro-82M（TTS）、Whisper-base（ASR）
 
-Chat uses `deepseek-flash` by default through Anthropic-compatible Messages / Files APIs. Speech features use ASR / TTS endpoints. Requests include extensions for search, link reading, titles, and `latest_reminder`, so the configured service must support the corresponding capabilities. Supported attachment formats are determined by server-side validation.
+> 本地 TTS 的推理管线（ONNX Runtime Web + 音素转换）还没接上，当前朗读走「系统语音」或「云端 TTS」，两者都可用。模型下载与缓存已经能用。
 
-```text
+## 开发
+
+```powershell
+pnpm dev          # 浏览器调试，8090 端口
+pnpm type         # 类型检查
+pnpm build        # 生产构建到 dist/
+pnpm android:sync # 构建并同步进 Android 工程
+pnpm android:apk  # 出 debug APK
+```
+
+## 目录
+
+```
 src/
-  app/                 Application layout, themes, and global styles
-  components/          Chat, settings, Markdown, and other UI components
-  i18n/                English and Chinese translations
+  app/                  布局、主题、皮肤
+  components/settings/  设置（通用 / 扩展 / 数据管理）
+  components/onboarding 首次启动选模式
+  components/image      生图弹窗
   services/
-    api/               API requests, SSE, and protocol types
-    chat/              Conversations, message branches, storage, and history import/export
-    markdown/          Markdown parsing, syntax highlighting, and diagrams
-    speech/            Audio recording and read-aloud playback
-  utils/               Shared utilities
+    api/                请求层（Anthropic 兼容 SSE）
+    chat/               会话状态与 IndexedDB
+    speech/             朗读引擎：system / kokoro / cloud
+    models/             模型清单、下载与缓存
+    image/              BYOK 生图
+    characterCard.ts    角色卡解析（PNG tEXt / JSON）
+    device.ts           WebNN / WebGPU / WASM 能力探测
+android/                Capacitor 生成的原生工程
 ```
 
-## License
+## 已知限制
 
-[MIT](LICENSE). The build copies the license to `dist/LICENSE`; include it when distributing the app. Third-party dependencies are subject to their own licenses.
+- 手机 WebView 里 WebNN 拿不到 Hexagon NPU；真要吃 NPU 需要原生插件（ONNX Runtime Mobile QNN EP），接口层已按 `computeDevice: auto|npu|gpu|cpu` 预留
+- 缝 Local Dream 需要 fork 它的 native 库或走它的 Intent 接口，与前端框架无关
+- 生图依赖你填的服务，应用本身不代理任何流量
+
+
+## 用量与计费
+
+**Plus 模式**下，输入框下方有一条实时状态：
+
+```
+12 轮 · 86 段 · 152 tok/s      1.2M tok · 缓存 93%      ¥0.41      7%
+```
+
+依次是：对话轮数、内容段数、生成速率、token 总量、缓存命中率、估算花费、上下文占用。
+
+设置里另有 **用量** 页，用四色堆叠条看构成：
+
+| 颜色 | 含义 |
+|---|---|
+| 🟩 绿 | 缓存命中（`cache_read_input_tokens`） |
+| 🟥 红 | 输入、未命中缓存（`input_tokens`） |
+| 🟦 蓝 | 输出（`output_tokens`） |
+| 🟧 橙 | 联网检索（按次计费） |
+
+单价按 DeepSeek 官方价写在 `src/services/billing.ts` 的 `DEFAULT_PRICE`，单位元 / 百万 token：
+
+```ts
+cacheHit: 0.2,   // 命中缓存
+input: 2,        // 未命中
+output: 3,       // 输出
+search: 0.01,    // 每次联网检索
+```
+
+要改就改这一个常量。上下文窗口按 128K（`CONTEXT_LIMIT`）算占比，取最近一轮的输入加输出。
+
+## 目录结构
+
+```
+src/
+  app/            应用外壳、主题皮肤、布局
+  components/     UI：聊天、消息、设置、计费、生图、引导
+  services/
+    api/          流式请求、事件解析、余额、语音接口
+    chat/         会话仓库、消息视图、归档导入导出
+    speech/       TTS 引擎（system / cloud / kokoro）
+    models/       本地模型清单与下载（hf-mirror / kaggle）
+    billing.ts    用量与计费
+    settings.ts   全部设置项（localStorage，前缀 ods:）
+    characterCard.ts  角色卡（PNG tEXt / JSON）
+figure/           品牌素材与透明底梗图（构建时拷进 dist/media）
+android/          Capacitor 生成的 Android 工程
+notes/            审计、计划、脚本、验证截图
+```
+
+## 上游
+
+- 上游英文说明：[README.upstream.md](README.upstream.md)
+- 上游中文说明：[README.upstream.zh-CN.md](README.upstream.zh-CN.md)
+
+## 协议
+
+MIT，与上游 chat-demo 一致。
+
+## 版本与签名
+
+版本号写在 `package.json` 的 `version`，格式固定为 **`1.x.y-tag.z`**：
+
+| 段 | 含义 |
+|---|---|
+| `1` | 主版本，协议/数据格式大改才动 |
+| `x` | 次版本，加功能 |
+| `y` | 修订号，修 bug |
+| `tag` | `alpha` / `beta` / `rc`，正式版不带 tag |
+| `z` | 同一 tag 内的递增序号 |
+
+`android/app/build.gradle` 读这个版本号，同时算出 `versionName` 与 `versionCode`：
+
+```
+versionCode = major*1000000 + minor*10000 + patch*100 + tag序号
+1.0.0-alpha.1  →  versionCode 1000001
+```
+
+日常用脚本改，不用手改：
+
+```bash
+pnpm version:bump            # 看当前版本与 versionCode
+pnpm version:bump tag        # 1.0.0-alpha.1 -> 1.0.0-alpha.2
+pnpm version:bump patch      # -> 1.0.1-alpha.1
+pnpm version:bump minor      # -> 1.1.0-alpha.1
+pnpm version:bump stable     # -> 1.1.0（正式版）
+```
+
+签名材料在 `android/` 下（**不进版本库**）：
+
+- `android/app/open-deepseek-release.jks`：RSA 2048，有效期 10000 天
+- `android/keystore.properties`：别名与密码
+
+只要 `keystore.properties` 存在，`assembleRelease` 就自动用正式签名；文件不存在时回退 debug 签名，不影响本地调试。**这两个文件丢了就没法覆盖升级已安装的版本**，务必自己留一份备份。
+
+```bash
+pnpm android:release         # 出签名包
+# 产物：android/app/build/outputs/apk/release/app-release.apk
+```
