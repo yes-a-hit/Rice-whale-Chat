@@ -33,43 +33,40 @@
 - ASR 是否也本地化（faster-whisper）→ 待定。
 - 生图后端：ComfyUI API（现有）还是自带 OpenVINO SD 管线 → 待定。
 
-## 状态（2026-11-18 18:12）
+## 状态（2026-11-18 18:24）
 
-### 梗图去白底（本轮）
+### 用量与计费（本轮）
 
-`notes/strip_white.py` 从 `figure/*.jpg` 重新生成，可重复执行：
+- `src/services/billing.ts`（新）：`DEFAULT_PRICE = { cacheHit: 0.2, input: 2, output: 3, search: 0.01 }`（元/百万 token、元/次），
+  `CONTEXT_LIMIT = 131_072`，`summarizeUsage()` 逐条累加 assistant 消息的 `usage` 与 `elapsedMs`。
+- 耗时：`AssistantMessage` 加 `startedAt` / `elapsedMs`，`settleReply` 收尾时算差值，供 tok/s 使用。
+- 底部状态条 `SessionStatsBar`（仅 Plus）：轮数 · 段数 · tok/s | token 总量 · 缓存命中率 | 金额 | 上下文占比。
+- 设置新增「用量」tab：四色堆叠条（绿 cache hit / 红 input / 蓝 output / 橙 search）+ 明细 + 速率 + 上下文。
+- 移动端四个 tab 收紧到 `min-width: 86px`，390px 宽正好放下。
 
-1. 亮度 ≥226 且饱和度 ≤26 的像素标记为「白」；
-2. 用 `scipy.ndimage.binary_propagation` 从四边做连通扩散 —— **只把与画布边缘连通的白变透明**，
-   人物白衣服、白眼白、对话气泡内部的白底全部保留；
-3. alpha 做 sigma=0.8 的高斯软化后再阈值化，边缘不生硬；
-4. 半透明像素按 alpha 反乘颜色（`(C - (1-a)*255)/a`）去掉白底光晕；
-5. `MinFilter(3)` 收 1px，去掉残留浅灰线；
-6. `quantize(colors=256, FASTOCTREE)` 压体积：welcome 487→89KB、no-key 441→57KB。
+### 生成参数（参考 chat-demo-unrestricted）
 
-产物 `figure/out/welcome.png`（760×845，透明 61%）、`figure/out/no-key.png`（800×740，透明 57%）。
-`Welcome.module.css` 的 `.mascotImage` 去掉 `border-radius`（透明图不再需要遮罩），改 `background: none`。
-预览图（棋盘格）输出到 `notes/preview-*.jpg`，不再混进 `figure/out` 被 copy 进 APK。
+- `safety_check` 从硬编码改为可选：`sendSafetyCheck` 默认关（= 请求里不带该字段，服务端按最低档）。
+- `temperature` / `top_p` / `max_tokens` 直调，`null` 表示不发送，设置里留空即恢复服务端默认。
+- UI 在「设置 → 扩展 → 生成参数」。
+- 与上游差异：上游 anti-retraction 那个开关我们直接做成默认行为（拦截整条链路已拆），不需要开关。
 
-### 移除前端拦截（上一轮）
+### 品牌与仓库
 
-`reply.ts` 的 `settleReply` / `canContinueReply` / `isUsableReply`、`describe.ts` 的 refusal 分支、
-`AssistantMessage.tsx` 的 `refused` 门控、`parseEvent.ts` 的 stop_reason 白名单——全部拆掉，
-`stop_reason: 'refusal'` 只当普通结束处理，正文与思考照常展示。
-
-### Lite 模式 UI 过大（上一轮）
-
-`skins.ts` 写 `--ods-zoom`，`.frame` 高度改 `calc(var(--app-viewport-height) / var(--ods-zoom))`；
-Lite 默认倍率 1.15 → 1.08，旧值自动收敛。
+- 项目名 `rice-whale-chat`，Android 应用名 `Rice Whale Chat`（appId 仍 `com.opendeepseek.chat`，改包名会让已装的应用变成孤儿）。
+- `origin` 指向 `https://github.com/yes-a-hit/Rice-whale-Chat`，上游保留为 `upstream`。
+- 已推三个 commit：工程脚手架 / 应用实现 / 文档与素材，最新 `af3661b`。
+- 三张梗图均为透明底 256 色 PNG：`welcome.png`（有 Key）、`hungry.png`（无 Key，「主人，奴家饿了」）、`wait.png`（余额不足提示里的小图）。
 
 ### 验证
 
-`pnpm type` / `pnpm build` / `assembleRelease` 全通过。截图 `notes/alpha-pv-nokey.png`、
-`notes/alpha-pv-keyed.png` 确认透明底融入页面、无白框。
-产物 `android/app/build/outputs/apk/release/app-release.apk`（6.47MB，v1.0.0-alpha.1）。
+`pnpm type` / `pnpm build` / `assembleRelease` 全通过。
+截图：`notes/hungry-key.png`（无 Key 欢迎页）、`notes/gen-ext.png`（生成参数）、`notes/usage-tab4.png`（用量 tab）。
+产物 `android/app/build/outputs/apk/release/app-release.apk`（6.55MB，v1.0.0-alpha.1）。
 
 ### 仍未完成
 
+- 计费的四色条只有空态截图，带数据的形态要等真机聊几轮再看
 - Kokoro-82M ONNX 推理与中文 G2P（`engines/kokoro.ts` 仍抛 `LOCAL_TTS_NOT_INSTALLED`）
 - 原生 NPU 插件（ONNX Runtime Mobile QNN EP）
 - 真机实测
