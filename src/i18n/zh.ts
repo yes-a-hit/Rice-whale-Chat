@@ -356,4 +356,9 @@ export const zh = {
   odsNpuNoDevice: '浏览器有 WebNN 但只开放 CPU/GPU，没有 npu 设备类型。真 NPU 看上面那格',
   odsNpuOk: '浏览器可以直接用 NPU',
   odsWelcomeBubble: '欢迎回来，\n想从哪里开始',
+  odsModelFlash: '快速',
+  odsModelPro: '专家',
+  odsModel: '模型',
+  odsCollapseThinking: '自动折叠思考内容',
+  odsCollapseThinkingHint: '开启后思考完就收起来，只留一行标题，点一下再展开',
 } as const

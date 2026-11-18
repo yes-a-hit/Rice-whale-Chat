@@ -1,4 +1,5 @@
 import { useTranslate } from '../../i18n/index.js'
+import { useSettings } from '../../services/settings.js'
 import clsx from 'clsx'
 import { memo, useEffect, useState, type ReactNode } from 'react'
 import {
@@ -65,7 +66,14 @@ export const ReplyArea = memo(function ReplyArea({
   hasResponse: boolean
 }) {
   useTranslate()
-  const [open, setOpen] = useState(true)
+  const collapseThinking = useSettings((state) => state.collapseThinking)
+  const [open, setOpen] = useState(!collapseThinking)
+  // 开启「自动折叠」时，流式期间展开（能看见在思考），回答开始/结束后收起
+  useEffect(() => {
+    if (collapseThinking && !streaming) {
+      setOpen(false)
+    }
+  }, [collapseThinking, streaming])
   const titleActive = streaming && !hasResponse
   useTicker(titleActive, 1000)
   if (view.steps.length === 0 && !(message.thinking && streaming)) {

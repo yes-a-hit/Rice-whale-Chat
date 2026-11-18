@@ -4,7 +4,20 @@
  * 声明 deepseek_web_search / deepseek_read_url 或设置 safety_check.level 为 high 时进入扩展模式。
  */
 
-export type ChatModel = 'deepseek-flash' | 'deepseek-v4-pro'
+/**
+ * 可选模型。
+ * - v4.1-flash：快速档，便宜、快，日常问答
+ * - v4-pro：专家档，慢但推理强，适合复杂问题
+ */
+export type ChatModel = 'deepseek-v4.1-flash' | 'deepseek-v4-pro'
+
+/** 界面上给两档起的名字 */
+export const CHAT_MODELS: { id: ChatModel; labelKey: 'odsModelFlash' | 'odsModelPro' }[] = [
+  { id: 'deepseek-v4.1-flash', labelKey: 'odsModelFlash' },
+  { id: 'deepseek-v4-pro', labelKey: 'odsModelPro' },
+]
+
+export const DEFAULT_CHAT_MODEL: ChatModel = 'deepseek-v4.1-flash'
 
 // ---------- 响应：内容块 ----------
 

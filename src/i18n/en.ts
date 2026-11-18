@@ -365,4 +365,9 @@ export const en = {
   odsNpuNoDevice: 'WebNN only exposes CPU/GPU here. Check the native bridge above for real NPU',
   odsNpuOk: 'Browser-level NPU available',
   odsWelcomeBubble: 'Welcome back.\nWhere should we start?',
+  odsModelFlash: 'Fast',
+  odsModelPro: 'Pro',
+  odsModel: 'Model',
+  odsCollapseThinking: 'Auto-collapse thinking',
+  odsCollapseThinkingHint: 'Fold the thinking block once it finishes; tap the title to expand',
 } satisfies Record<keyof typeof zh, string>

@@ -8,7 +8,8 @@ import {
   IconStopFill16,
   IconThinkOutline14,
 } from '../base/icons.js'
-import { setSearch, setThinking, useSettings } from '../../services/settings.js'
+import { setModel, setSearch, setThinking, useSettings } from '../../services/settings.js'
+import { CHAT_MODELS, type ChatModel } from '../../services/api/types.js'
 import { useIsMobile } from '../../app/viewport.js'
 import { sendMessage, stopReply, useChatStore } from '../../services/chat/store.js'
 import {
@@ -53,7 +54,45 @@ const Input = ({ sessionId }: { sessionId: string | null }) => {
     (state) => sessionId !== null && Object.hasOwn(state.streaming, sessionId)
   )
   const uiMode = useSettings((state) => state.uiMode)
-  const thinking = useSettings((state) => state.thinking)
+  /** 模型选择：Lite 用「快速 / 专家」两个胶囊，Plus 用下拉 */
+const ModelPicker = () => {
+  const t = useTranslate()
+  const uiMode = useSettings((state) => state.uiMode)
+  const model = useSettings((state) => state.model)
+  if (uiMode === 'lite') {
+    return (
+      <div className={styles.modelGroup}>
+        {CHAT_MODELS.map((item) => (
+          <button
+            key={item.id}
+            type="button"
+            className={clsx(styles.toggle, model === item.id && styles.selected)}
+            aria-pressed={model === item.id}
+            onClick={() => setModel(item.id)}
+          >
+            <span className={styles.toggleLabel}>{t(item.labelKey)}</span>
+          </button>
+        ))}
+      </div>
+    )
+  }
+  return (
+    <select
+      className={styles.modelSelect}
+      aria-label={t('odsModel')}
+      value={model}
+      onChange={(event) => setModel(event.target.value as ChatModel)}
+    >
+      {CHAT_MODELS.map((item) => (
+        <option key={item.id} value={item.id}>
+          {t(item.labelKey)}
+        </option>
+      ))}
+    </select>
+  )
+}
+
+const thinking = useSettings((state) => state.thinking)
   const importingHistory = useChatStore((state) => state.importingHistory)
   const isMobile = useIsMobile()
   const search = useSettings((state) => state.search)
@@ -214,6 +253,7 @@ const Input = ({ sessionId }: { sessionId: string | null }) => {
       </div>
       <div className={styles.functionRow}>
         {/* 深度思考 / 智能搜索开关，tooltip 在按钮上方 */}
+        <ModelPicker />
         <div ref={togglesRef} className={styles.toggles}>
           <Tooltip content={t('deactivatedThinkTooltip')}>
             <button

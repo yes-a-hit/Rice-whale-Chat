@@ -25,6 +25,7 @@ import {
   setSystemPrompt,
   setThinking,
   setTtsRate,
+  setCollapseThinking,
   setTtsSystemVoice,
   setTtsVoice,
   setUiMode,
@@ -285,8 +286,25 @@ const DefaultToggleSettings = () => {
   const t = useTranslate()
   const thinking = useSettings((state) => state.thinking)
   const search = useSettings((state) => state.search)
+  const collapseThinking = useSettings((state) => state.collapseThinking)
   return (
     <>
+      <SettingCell
+        label={t('odsCollapseThinking')}
+        description={t('odsCollapseThinkingHint')}
+        status={null}
+        action={
+          <button
+            type="button"
+            role="switch"
+            aria-checked={collapseThinking}
+            className={clsx(styles.switch, collapseThinking && styles.switchOn)}
+            onClick={() => setCollapseThinking(!collapseThinking)}
+          >
+            <span className={styles.switchThumb} />
+          </button>
+        }
+      />
       <SettingCell
         label={t('odsDefaultThinking')}
         description={t('odsDefaultThinkingHint')}

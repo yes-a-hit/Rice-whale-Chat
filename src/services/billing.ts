@@ -16,10 +16,14 @@ export type PriceTable = {
 }
 
 /** DeepSeek 官方价（deepseek-chat）：缓存命中 0.2、未命中 2、输出 3；联网检索按次估算 */
+/**
+ * DeepSeek 官方价（元 / 百万 token，缓存命中价 / 未命中输入价 / 输出价）。
+ * 换模型或换服务商后可在设置里改。
+ */
 export const DEFAULT_PRICE: PriceTable = {
-  cacheHit: 0.2,
+  cacheHit: 0.5,
   input: 2,
-  output: 3,
+  output: 8,
   search: 0.01,
 }
 

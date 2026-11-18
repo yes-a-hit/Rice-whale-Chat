@@ -2,7 +2,8 @@ import { useMemo } from 'react'
 import { useTranslate } from '../../i18n/index.js'
 import { useSettings } from '../../services/settings.js'
 import { useChatStore } from '../../services/chat/store.js'
-import { compactNumber, formatCost, summarizeUsage } from '../../services/billing.js'
+import { compactNumber, DEFAULT_PRICE, formatCost, summarizeUsage } from '../../services/billing.js'
+import type { AssistantMessage } from '../../services/chat/types.js'
 import styles from './SessionStatsBar.module.css'
 
 /**
@@ -15,7 +16,44 @@ export const SessionStatsBar = ({ sessionId }: { sessionId: string | null }) => 
   const session = useChatStore((state) =>
     sessionId ? state.sessionCache[sessionId] : undefined
   )
-  const usage = useMemo(() => summarizeUsage(session?.messages ?? []), [session?.messages])
+/** 粗略取一条回复已生成的正文长度（不含思考块） */
+const replyTextLength = (message: unknown): number => {
+  let length = 0
+  const blocks = (message as { blocks?: AssistantMessage['blocks'] }).blocks ?? []
+  for (const block of blocks) {
+    if (block.type === 'text' && 'text' in block) {
+      length += String(block.text ?? '').length
+    }
+  }
+  return length
+}
+
+  const usage = useMemo(() => {
+    const messages = session?.messages ?? []
+    const base = summarizeUsage(messages)
+    // 流式回复还没有 usage 字段：按已生成字符数估 output token，让数字实时动
+    const pending = messages.filter(
+      (message) => message.role === 'assistant' && message.status === 'pending'
+    )
+    if (pending.length === 0) {
+      return base
+    }
+    let liveTokens = 0
+    for (const message of pending) {
+      liveTokens += Math.ceil(replyTextLength(message) / 1.6)
+    }
+    if (liveTokens <= 0) {
+      return base
+    }
+    const costOutput = (liveTokens / 1_000_000) * DEFAULT_PRICE.output
+    return {
+      ...base,
+      outputTokens: base.outputTokens + liveTokens,
+      totalTokens: base.totalTokens + liveTokens,
+      costOutput: base.costOutput + costOutput,
+      cost: base.cost + costOutput,
+    }
+  }, [session?.messages])
 
   if (uiMode !== 'plus' || usage.turns === 0) {
     return null

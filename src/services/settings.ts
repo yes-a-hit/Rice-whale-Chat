@@ -1,3 +1,4 @@
+import type { ChatModel } from './api/types.js'
 import { create } from 'zustand'
 import type { TtsVoice } from './api/speech.js'
 import { normalizeLocation, type UserLocation } from './location.js'
@@ -80,6 +81,10 @@ type Settings = {
   advancedTts: boolean
   /** 是否显示账户余额 */
   showBalance: boolean
+  /** 思考内容完成后自动收起 */
+  collapseThinking: boolean
+  /** 当前模型（Lite 用快速/专家两档，Plus 可任选） */
+  model: ChatModel
   /** 生图（BYOK） */
   imageEnabled: boolean
   imageBaseUrl: string
@@ -136,6 +141,8 @@ const KEYS = {
   ttsSystemVoice: 'ods:tts-system-voice',
   advancedTts: 'ods:advanced-tts',
   showBalance: 'ods:show-balance',
+  collapseThinking: 'ods:collapse-thinking',
+  model: 'ods:model',
 } as const
 
 /** 旧版 chat-demo 的键前缀，首次启动时迁移一次，避免升级后丢 key */
@@ -245,6 +252,10 @@ const initialNumber = (key: string): number | null => {
   return Number.isFinite(value) ? value : null
 }
 
+/** 模型 id 校验：只认这两个，旧值回落快速档（不引用外部模块，避免初始化顺序问题） */
+const initialModel = (): ChatModel =>
+  read(KEYS.model) === 'deepseek-v4-pro' ? 'deepseek-v4-pro' : 'deepseek-v4.1-flash'
+
 const initialModelSource = (): ModelSource => {
   const saved = read(KEYS.modelSource)
   return saved === 'huggingface' || saved === 'kaggle' || saved === 'manual' ? saved : 'hf-mirror'
@@ -296,6 +307,8 @@ export const useSettings = create<Settings>(() => ({
   ttsSystemVoice: read(KEYS.ttsSystemVoice) ?? '',
   advancedTts: read(KEYS.advancedTts) === 'true',
   showBalance: read(KEYS.showBalance) !== '0',
+  collapseThinking: read(KEYS.collapseThinking) === 'true',
+  model: initialModel(),
 }))
 
 export const setLocale = (locale: Locale) => {
@@ -397,6 +410,16 @@ export const setTtsSystemVoice = (ttsSystemVoice: string) => {
 export const setAdvancedTts = (advancedTts: boolean) => {
   write(KEYS.advancedTts, String(advancedTts))
   useSettings.setState({ advancedTts })
+}
+
+export const setModel = (model: ChatModel) => {
+  write(KEYS.model, model)
+  useSettings.setState({ model })
+}
+
+export const setCollapseThinking = (collapseThinking: boolean) => {
+  write(KEYS.collapseThinking, collapseThinking ? 'true' : 'false')
+  useSettings.setState({ collapseThinking })
 }
 
 export const setShowBalance = (showBalance: boolean) => {

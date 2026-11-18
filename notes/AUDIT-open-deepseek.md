@@ -33,48 +33,41 @@
 - ASR 是否也本地化（faster-whisper）→ 待定。
 - 生图后端：ComfyUI API（现有）还是自带 OpenVINO SD 管线 → 待定。
 
-## 状态（2026-11-18 21:05）
+## 状态（2026-11-18 21:20）
 
-### 五条反馈：1-3 已修，4-5 出计划
+### 三条小活已落地
 
-**1. 版本号没更新** → 1.0.0-alpha.1 bump 到 1.1.0-alpha.1，versionCode 1010001，
-apt2 dump badging 已确认。
+1. **自动折叠思考**：设置项 collapseThinking（默认关），开启后流式期间展开、回答开始/结束自动收起；
+   ReplyArea.tsx 用 useEffect 监听 streaming。UI 在「扩展」页默认开关区。
+2. **计费实时**：DEFAULT_PRICE 改成官方口径（缓存命中 0.5 / 输入 2 / 输出 8，元每百万 token）；
+   SessionStatsBar 把 status=pending 的回复按「字符数 / 1.6」估 output token 并计入费用，
+   生成过程中数字会动。
+3. **模型选择**：ChatModel 改为 deepseek-v4.1-flash / deepseek-v4-pro；
+   settings 加 model；store.ts 的常量 MODEL 换成 currentModel() 读设置；
+   ChatInput 加 ModelPicker：Lite 是「快速 / 专家」两个胶囊，Plus 是一个下拉。
 
-**2. 主题一片白** → 根治：配色从 CSS 挪进 TS（	hemes/registry.ts 的 palette 与 image），
-套用时 skins.ts 的 pplyAppearance() 用 
-oot.style.setProperty **写成行内变量**。
-行内样式优先级最高，不再依赖 html[data-theme] 选择器能否匹配。
-	hemes.css 只剩遮罩色（--ods-veil-1/2）与说明。
-截图验证：
-otes/iv-ink.png、iv-tech.png、iv-sumi.png。
+**踩坑（重要）**：initialModel() 定义在 useSettings = create() 之后，
+production 构建（压缩后）报 Cannot access 'ep' before initialization——
+const 箭头函数在模块顶层初始化前被调用就是 TDZ。dev 模式不报是因为没压缩。
+教训：所有 initialXxx() 必须定义在 create() 之前。
 
-**3. NPU 检测冲突** → 两格本来就是两层东西：上面「NPU 原生桥」是 Capacitor 原生插件（ORT/QNN），
-下面「浏览器算力（Web）」是 Web API。改文案把这件事说透：
-odsNpuNoWebnn = 「浏览器这层没有 WebNN。真 NPU 只能走上面那格『NPU 原生桥』，Web 侧最多用 WebGPU」，
-odsComputeDevice 改名「浏览器算力（Web）」，hint 里直接指向上一格。
+**踩坑（样式）**：模型选择器一开始放在 .toggles 内部，被 .collapsedToggles .toggleLabel{display:none}
+的折叠逻辑吃掉文字。挪到 toggles 外面才稳定显示。
 
-**4. 生图 BYOK / 本地模型 / LoRA** → 计划见 
-otes/PLAN-local-ai.md。
-现状：云端四个字段是散的、本地没有任何模型入口、没有 LoRA 概念。
-计划：新增生图设置分组（通道切换 + 云端五项 + 本地推荐模型 + LoRA 多选 + 导入），
-先做纯 UI 与存储（1–5 步），推理后端等 NPU/WebGPU 就绪。
+### 新增五条（m02997）已出计划
 
-**5. 本地跑千问** → 计划同上。选型建议 ONNX Runtime GenAI（与现有 ORT 同栈），
-模型 Qwen2.5-1.5B-int4（约 1GB）/ 3B-int4（约 2GB）。
-不做 tool calling / 联网 / 深度思考——小模型会胡说。
+
+otes/PLAN-plus.md：可编辑/删除回复（4h）、per-conversation agent 与 preset（8h，依赖角色卡）、
+角色卡独立可调与绑定背景（10h）、归档与分类（5h）、知识库工作流清洗→提炼→入库→RAG（~21h）。
+建议顺序：1 → 4 → 3 → 2 → 5。
 
 ### 验证
 
-pnpm type / pnpm build / ssembleRelease 通过。APK 47.9MB，1.1.0-alpha.1。
-
-### 仍未完成
-
-- 生图与本地 LLM（计划已出）
-- NPU 上真跑模型（模型转换 + 中文 G2P）
-- 上下文压缩
-- 真机实测
+pnpm type / pnpm build / ssembleRelease 通过。APK 47.82MB，1.1.0-alpha.1。
+截图 
+otes/n-lite.png（快速/专家胶囊）、
+otes/n-plus.png（下拉）。
 
 ## 构建
 
-- 调试：pnpm android:apk
-- 正式：pnpm android:release
+- 调试：\pnpm android:apk\n- 正式：\pnpm android:release\n
