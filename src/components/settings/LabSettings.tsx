@@ -21,6 +21,7 @@ import {
   type ComputeCapabilities,
 } from '../../services/device.js'
 import { isLocalImageAvailable } from '../../services/image/localPipeline.js'
+import { readNpuProviders, readNpuStatus } from '../../services/npu.js'
 import { SettingCell } from './SettingCell.js'
 import { ModelsSection } from './ModelsSection.js'
 import styles from './Ext.module.css'
@@ -32,6 +33,44 @@ import styles from './Ext.module.css'
  * Android WebView 里 WebNN 拿不到 Hexagon NPU，本地推理落在 WebGPU/WASM 上，
  * 有的机型直接起不来。所以单独放一页，出问题不影响日常聊天。
  */
+export const NpuBridgeCell = () => {
+  const [status, setStatus] = useState<Awaited<ReturnType<typeof readNpuStatus>> | null>(null)
+  const [providers, setProviders] = useState<string[]>([])
+  const [busy, setBusy] = useState(false)
+
+  const probe = () => {
+    setBusy(true)
+    void Promise.all([readNpuStatus(), readNpuProviders()])
+      .then(([next, list]) => {
+        setStatus(next)
+        setProviders(list)
+      })
+      .finally(() => setBusy(false))
+  }
+
+  const summary = status
+    ? status.unavailable
+      ? '未在原生环境运行（浏览器预览）'
+      : `ORT ${status.ort ? '✓' : '✗'} · QNN ${status.qnnLibrary ? '✓' : '✗'} · ${status.soc || status.device} · ${status.abi}`
+    : '查看 ONNX Runtime 与 QNN 后端是否打进包'
+
+  return (
+    <SettingCell
+      label="NPU 原生桥"
+      description={providers.length > 0 ? `${summary}\nEP: ${providers.join(', ')}` : summary}
+      status={null}
+      stacked
+      action={
+        <div className={styles.fieldRow}>
+          <button type="button" className={styles.ghostButton} disabled={busy} onClick={probe}>
+            {busy ? '检测中…' : '检测'}
+          </button>
+        </div>
+      }
+    />
+  )
+}
+
 export const LabSettings = () => {
   const t = useTranslate()
   const ttsEngine = useSettings((state) => state.ttsEngine)
@@ -48,6 +87,8 @@ export const LabSettings = () => {
         <div className={styles.groupTitle}>{t('odsLabTitle')}</div>
         <div className={styles.groupHint}>{t('odsLabHint')}</div>
       </div>
+
+      <NpuBridgeCell />
 
       <SettingCell
         label={t('odsComputeDevice')}

@@ -30,6 +30,10 @@ android {
         versionCode appVersionCode
         versionName appVersionName
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        ndk {
+            // 手机端只需要 arm；x86 只用于模拟器，本机禁开模拟器
+            abiFilters 'arm64-v8a'
+        }
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
              // Default: https://android.googlesource.com/platform/frameworks/base/+/282e181b58cf72b6ca770dc7ca5f91f135444502/tools/aapt/AaptAssets.cpp#61
@@ -44,6 +48,26 @@ android {
                 keyAlias keystoreProps['keyAlias']
                 keyPassword keystoreProps['keyPassword']
             }
+        }
+    }
+    packagingOptions {
+        jniLibs {
+            // onnxruntime-android-qnn 把各代 Hexagon 后端全打进来了，共 115MB。
+            // libQnnHtpPrepare 是离线模型准备工具（42MB），运行时用不到；
+            // V68/V69 是更老的 SoC，Dsp/Gpu 我们也不用。
+            // 7s Gen 4 落在 V73/V75 之间，两个都留着更稳。
+            excludes += [
+                    '**/libQnnHtpPrepare.so',
+                    '**/libQnnGpu.so',
+                    '**/libQnnCpu.so',
+                    '**/libQnnDsp.so',
+                    '**/libQnnDspV66Skel.so',
+                    '**/libQnnDspV66Stub.so',
+                    '**/libQnnHtpV68Skel.so',
+                    '**/libQnnHtpV68Stub.so',
+                    '**/libQnnHtpV69Skel.so',
+                    '**/libQnnHtpV69Stub.so',
+            ]
         }
     }
     buildTypes {
@@ -73,6 +97,8 @@ dependencies {
     androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
     androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
     implementation project(':capacitor-cordova-android-plugins')
+    // ONNX Runtime + Qualcomm QNN EP：Hexagon NPU 的唯一入口（HTP 后端）
+    implementation "com.microsoft.onnxruntime:onnxruntime-android-qnn:1.20.0"
 }
 
 apply from: 'capacitor.build.gradle'
