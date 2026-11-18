@@ -25,10 +25,11 @@ import {
   setSystemPrompt,
   setThinking,
   setTtsRate,
-  applyPreset,
-  removePreset,
-  savePreset,
+  applyProvider,
+  removeProvider,
+  saveProvider,
   setCollapseThinking,
+  setModel,
   setTtsSystemVoice,
   setTtsVoice,
   setUiMode,
@@ -122,24 +123,28 @@ const ModeSetting = () => {
   )
 }
 
-/** 模型方案：一套「服务地址 + Key + 模型名」，支持任意 OpenAI 兼容接口 */
+/**
+ * 供应商 + 模型：一个供应商是一套「地址 + Key」，下面挂多个模型。
+ * 选中供应商后，再从中挑一个模型作为当前模型。
+ */
 const ModelPresetSettings = () => {
   const t = useTranslate()
-  const presets = useSettings((state) => state.presets)
-  const activePreset = useSettings((state) => state.activePreset)
+  const providers = useSettings((state) => state.providers)
+  const activeProvider = useSettings((state) => state.activeProvider)
+  const model = useSettings((state) => state.model)
   const [editingId, setEditingId] = useState<string | null>(null)
-  const [draft, setDraft] = useState({ name: '', baseUrl: '', apiKey: '', model: '' })
+  const [draft, setDraft] = useState({ name: '', baseUrl: '', apiKey: '', models: '' })
 
   const startEdit = (id: string) => {
-    const preset = presets.find((item) => item.id === id)
-    if (!preset) {
+    const provider = providers.find((item) => item.id === id)
+    if (!provider) {
       return
     }
     setDraft({
-      name: preset.name,
-      baseUrl: preset.baseUrl,
-      apiKey: preset.apiKey ?? '',
-      model: preset.model,
+      name: provider.name,
+      baseUrl: provider.baseUrl,
+      apiKey: provider.apiKey ?? '',
+      models: provider.models.join('\n'),
     })
     setEditingId(id)
   }
@@ -148,44 +153,64 @@ const ModelPresetSettings = () => {
     if (!editingId) {
       return
     }
-    const preset = {
+    const models = draft.models
+      .split(/[\n,]/)
+      .map((item) => item.trim())
+      .filter(Boolean)
+    const provider = {
       id: editingId,
-      name: draft.name.trim() || draft.model.trim() || '未命名',
+      name: draft.name.trim() || draft.baseUrl.trim() || '未命名供应商',
       baseUrl: draft.baseUrl.trim(),
-      model: draft.model.trim(),
+      models,
       ...(draft.apiKey.trim() ? { apiKey: draft.apiKey.trim() } : {}),
     }
-    savePreset(preset)
-    applyPreset(preset.id)
+    saveProvider(provider)
+    applyProvider(provider.id)
     setEditingId(null)
   }
 
   const add = () => {
-    const id = `preset-${Date.now()}`
-    savePreset({ id, name: '新方案', baseUrl: '', model: '' })
+    const id = `provider-${Date.now()}`
+    saveProvider({ id, name: '新供应商', baseUrl: '', models: [] })
     setEditingId(id)
-    setDraft({ name: '新方案', baseUrl: '', apiKey: '', model: '' })
+    setDraft({ name: '新供应商', baseUrl: '', apiKey: '', models: '' })
   }
 
   return (
     <div className={styles.group}>
-      <div className={styles.groupTitle}>{t('odsPresets')}</div>
-      <div className={styles.groupHint}>{t('odsPresetsHint')}</div>
-      {presets.map((preset) => (
-        <div key={preset.id} className={styles.presetRow}>
-          <button
-            type="button"
-            className={clsx(styles.presetMain, preset.id === activePreset && styles.presetActive)}
-            onClick={() => applyPreset(preset.id)}
-          >
-            <span className={styles.presetName}>{preset.name}</span>
-            <span className={styles.presetMeta}>
-              {preset.model || '—'} · {preset.baseUrl || t('odsPresetDefaultHost')}
-            </span>
-          </button>
-          <button type="button" className={styles.ghostButton} onClick={() => startEdit(preset.id)}>
-            {t('odsPresetEdit')}
-          </button>
+      <div className={styles.groupTitle}>{t('odsProviders')}</div>
+      <div className={styles.groupHint}>{t('odsProvidersHint')}</div>
+      {providers.map((provider) => (
+        <div key={provider.id} className={styles.presetBlock}>
+          <div className={styles.presetRow}>
+            <button
+              type="button"
+              className={clsx(styles.presetMain, provider.id === activeProvider && styles.presetActive)}
+              onClick={() => applyProvider(provider.id)}
+            >
+              <span className={styles.presetName}>{provider.name}</span>
+              <span className={styles.presetMeta}>
+                {provider.baseUrl || t('odsPresetDefaultHost')} · {provider.models.length} 个模型
+              </span>
+            </button>
+            <button type="button" className={styles.ghostButton} onClick={() => startEdit(provider.id)}>
+              {t('odsPresetEdit')}
+            </button>
+          </div>
+          {provider.id === activeProvider && provider.models.length > 0 ? (
+            <div className={styles.modelChips}>
+              {provider.models.map((item) => (
+                <button
+                  key={item}
+                  type="button"
+                  className={clsx(styles.modelChip, item === model && styles.modelChipActive)}
+                  onClick={() => setModel(item)}
+                >
+                  {item}
+                </button>
+              ))}
+            </div>
+          ) : null}
         </div>
       ))}
       {editingId ? (
@@ -204,16 +229,17 @@ const ModelPresetSettings = () => {
           />
           <input
             className={styles.input}
-            value={draft.model}
-            placeholder={t('odsPresetModel')}
-            onChange={(event) => setDraft({ ...draft, model: event.target.value })}
-          />
-          <input
-            className={styles.input}
             type="password"
             value={draft.apiKey}
             placeholder={t('odsPresetKey')}
             onChange={(event) => setDraft({ ...draft, apiKey: event.target.value })}
+          />
+          <textarea
+            className={styles.textarea}
+            value={draft.models}
+            rows={3}
+            placeholder={t('odsProviderModels')}
+            onChange={(event) => setDraft({ ...draft, models: event.target.value })}
           />
           <div className={styles.fieldRow}>
             <button type="button" className={styles.saveButton} onClick={save}>
@@ -223,7 +249,7 @@ const ModelPresetSettings = () => {
               type="button"
               className={styles.ghostButton}
               onClick={() => {
-                removePreset(editingId)
+                removeProvider(editingId)
                 setEditingId(null)
               }}
             >

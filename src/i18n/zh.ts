@@ -374,6 +374,9 @@ export const zh = {
   odsPresetBaseUrl: '服务地址，如 https://api.openai.com/v1',
   odsPresetModel: '模型名，如 gpt-4o-mini',
   odsPresetKey: '这个方案专用的 Key（可留空）',
-  odsPresetAdd: '＋ 新增方案',
+  odsPresetAdd: '＋ 新增供应商',
   odsPresetEdit: '编辑',
+  odsProviders: '供应商与模型',
+  odsProvidersHint: '一个供应商是一套「地址 + Key」，下面挂多个模型。DeepSeek、OpenAI、硅基流动、OpenRouter、自建中转都这么配；Key 留空则用上面的通用 Key',
+  odsProviderModels: '模型列表，一行一个',
 } as const

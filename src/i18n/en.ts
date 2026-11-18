@@ -383,6 +383,9 @@ export const en = {
   odsPresetBaseUrl: 'Base URL, e.g. https://api.openai.com/v1',
   odsPresetModel: 'Model, e.g. gpt-4o-mini',
   odsPresetKey: 'Key for this preset (optional)',
-  odsPresetAdd: '+ Add preset',
+  odsPresetAdd: '+ Add provider',
   odsPresetEdit: 'Edit',
+  odsProviders: 'Providers & models',
+  odsProvidersHint: 'A provider is one base URL + key with several models. Works for DeepSeek, OpenAI, OpenRouter, self-hosted gateways; leave the key empty to reuse the global one',
+  odsProviderModels: 'Models, one per line',
 } satisfies Record<keyof typeof zh, string>

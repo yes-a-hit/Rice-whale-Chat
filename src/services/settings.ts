@@ -4,38 +4,53 @@ import type { TtsVoice } from './api/speech.js'
 import { normalizeLocation, type UserLocation } from './location.js'
 
 /**
- * 模型方案：一套「服务地址 + Key + 模型名」的组合。
- * 支持任何 OpenAI 兼容接口（DeepSeek 官方 / OpenAI / 中转站 / 自建）。
+ * 供应商：一套「服务地址 + Key」，下面挂多个可选模型。
+ * DeepSeek 官方、OpenAI、硅基流动、OpenRouter、自建中转都按这个结构算。
  */
-export type ProviderPreset = {
+export type Provider = {
   id: string
   name: string
   baseUrl: string
   /** 留空表示沿用全局 API Key */
   apiKey?: string
-  model: string
+  /** 该供应商可选的模型名 */
+  models: string[]
 }
 
-/** 内置方案：官方 DeepSeek + OpenAI 兼容入口 */
-export const BUILTIN_PRESETS: ProviderPreset[] = [
-  { id: 'deepseek', name: 'DeepSeek 官方', baseUrl: 'https://api.deepseek.com', model: 'deepseek-v4.1-flash' },
-  { id: 'openai', name: 'OpenAI', baseUrl: 'https://api.openai.com/v1', model: 'gpt-4o-mini' },
-  { id: 'custom', name: '自定义（OpenAI 兼容）', baseUrl: '', model: '' },
+/** 内置供应商 */
+export const BUILTIN_PROVIDERS: Provider[] = [
+  {
+    id: 'deepseek',
+    name: 'DeepSeek 官方',
+    baseUrl: 'https://api.deepseek.com',
+    models: ['deepseek-v4.1-flash', 'deepseek-v4-pro'],
+  },
+  {
+    id: 'openai',
+    name: 'OpenAI',
+    baseUrl: 'https://api.openai.com/v1',
+    models: ['gpt-4o-mini', 'gpt-4o'],
+  },
+  {
+    id: 'custom',
+    name: '自定义（OpenAI 兼容）',
+    baseUrl: '',
+    models: [],
+  },
 ]
 
-const readPresets = (): ProviderPreset[] => {
-  const raw = read(KEYS.presets)
+const readProviders = (): Provider[] => {
+  const raw = read(KEYS.providers)
   if (!raw) {
-    return BUILTIN_PRESETS
+    return BUILTIN_PROVIDERS
   }
   try {
-    const parsed = JSON.parse(raw) as ProviderPreset[]
-    return Array.isArray(parsed) && parsed.length > 0 ? parsed : BUILTIN_PRESETS
+    const parsed = JSON.parse(raw) as Provider[]
+    return Array.isArray(parsed) && parsed.length > 0 ? parsed : BUILTIN_PROVIDERS
   } catch {
-    return BUILTIN_PRESETS
+    return BUILTIN_PROVIDERS
   }
 }
-
 export type Locale = 'zh-CN' | 'en-US'
 
 /** 主题偏好；默认跟随系统 */
@@ -118,10 +133,10 @@ type Settings = {
   collapseThinking: boolean
   /** 当前模型（Lite 用快速/专家两档，Plus 可任选） */
   model: string
-  /** 模型方案列表（服务地址 + Key + 模型名） */
-  presets: ProviderPreset[]
-  /** 当前使用的方案 id */
-  activePreset: string
+  /** 供应商列表 */
+  providers: Provider[]
+  /** 当前供应商 id */
+  activeProvider: string
   /** 生图（BYOK） */
   imageEnabled: boolean
   imageBaseUrl: string
@@ -180,8 +195,8 @@ const KEYS = {
   showBalance: 'ods:show-balance',
   collapseThinking: 'ods:collapse-thinking',
   model: 'ods:model',
-  presets: 'ods:presets',
-  activePreset: 'ods:active-preset',
+  providers: 'ods:providers',
+  activeProvider: 'ods:active-provider',
 } as const
 
 /** 旧版 chat-demo 的键前缀，首次启动时迁移一次，避免升级后丢 key */
@@ -347,8 +362,8 @@ export const useSettings = create<Settings>(() => ({
   showBalance: read(KEYS.showBalance) !== '0',
   collapseThinking: read(KEYS.collapseThinking) === 'true',
   model: initialModel(),
-  presets: readPresets(),
-  activePreset: read(KEYS.activePreset) ?? 'deepseek',
+  providers: readProviders(),
+  activeProvider: read(KEYS.activeProvider) ?? 'deepseek',
 }))
 
 export const setLocale = (locale: Locale) => {
@@ -452,48 +467,47 @@ export const setAdvancedTts = (advancedTts: boolean) => {
   useSettings.setState({ advancedTts })
 }
 
-/** 切换模型方案：把方案里的地址/模型/Key 写进当前生效设置 */
-export const applyPreset = (id: string) => {
+/** 切换到某个供应商：写地址与 Key，模型切到它的第一个 */
+export const applyProvider = (id: string) => {
   const state = useSettings.getState()
-  const preset = state.presets.find((item) => item.id === id)
-  if (!preset) {
+  const provider = state.providers.find((item) => item.id === id)
+  if (!provider) {
     return
   }
-  const baseUrl = preset.baseUrl.trim()
-  const model = preset.model.trim()
-  write(KEYS.activePreset, id)
+  const baseUrl = provider.baseUrl.trim()
+  const nextModel = provider.models[0] ?? state.model
+  write(KEYS.activeProvider, id)
   if (baseUrl) {
     write(KEYS.apiBaseUrl, baseUrl)
   }
-  if (model) {
-    write(KEYS.model, model)
-  }
-  if (preset.apiKey) {
-    write(KEYS.apiKey, preset.apiKey)
+  write(KEYS.model, nextModel)
+  if (provider.apiKey) {
+    write(KEYS.apiKey, provider.apiKey)
   }
   useSettings.setState({
-    activePreset: id,
+    activeProvider: id,
     ...(baseUrl ? { apiBaseUrl: baseUrl } : {}),
-    ...(model ? { model } : {}),
-    ...(preset.apiKey ? { apiKey: preset.apiKey } : {}),
+    model: nextModel,
+    ...(provider.apiKey ? { apiKey: provider.apiKey } : {}),
   })
 }
 
-const persistPresets = (presets: ProviderPreset[]) => {
-  write(KEYS.presets, JSON.stringify(presets))
-  useSettings.setState({ presets })
+const persistProviders = (providers: Provider[]) => {
+  write(KEYS.providers, JSON.stringify(providers))
+  useSettings.setState({ providers })
 }
 
-/** 新增或更新一个方案 */
-export const savePreset = (preset: ProviderPreset) => {
-  const list = useSettings.getState().presets
-  const exists = list.some((item) => item.id === preset.id)
-  persistPresets(exists ? list.map((item) => (item.id === preset.id ? preset : item)) : [...list, preset])
+/** 新增或更新一个供应商 */
+export const saveProvider = (provider: Provider) => {
+  const list = useSettings.getState().providers
+  const exists = list.some((item) => item.id === provider.id)
+  persistProviders(
+    exists ? list.map((item) => (item.id === provider.id ? provider : item)) : [...list, provider]
+  )
 }
 
-export const removePreset = (id: string) => {
-  const list = useSettings.getState().presets.filter((item) => item.id !== id)
-  persistPresets(list)
+export const removeProvider = (id: string) => {
+  persistProviders(useSettings.getState().providers.filter((item) => item.id !== id))
 }
 
 export const setModel = (model: ChatModel) => {
