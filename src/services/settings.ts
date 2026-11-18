@@ -20,6 +20,8 @@ export type ComputeDevice = 'auto' | 'npu' | 'gpu' | 'cpu'
 export type AsrEngine = 'system' | 'local' | 'cloud'
 
 /** 模型下载源 */
+export type ImageProvider = 'cloud' | 'local'
+
 export type ModelSource = 'hf-mirror' | 'huggingface' | 'kaggle' | 'manual'
 
 /** 本机设置，存 localStorage：API 与服务地址、模式、语言主题、语音、提示词、皮肤、生图 BYOK */
@@ -66,6 +68,8 @@ type Settings = {
   ttsRate: number
   /** 系统语音的音色名（空 = 自动挑中文语音） */
   ttsSystemVoice: string
+  /** 进阶 TTS：按上下文匹配语速与音高 */
+  advancedTts: boolean
   /** 是否显示账户余额 */
   showBalance: boolean
   /** 生图（BYOK） */
@@ -73,6 +77,8 @@ type Settings = {
   imageBaseUrl: string
   imageApiKey: string
   imageModel: string
+  /** 生图走云端 BYOK 还是本地 NPU 通道 */
+  imageProvider: ImageProvider
 }
 
 /** 官方默认系统提示词，与 chat-demo 一致 */
@@ -109,10 +115,12 @@ const KEYS = {
   imageBaseUrl: 'ods:image-base-url',
   imageApiKey: 'ods:image-api-key',
   imageModel: 'ods:image-model',
+  imageProvider: 'ods:image-provider',
   characterPrompt: 'ods:character-prompt',
   characterName: 'ods:character-name',
   ttsRate: 'ods:tts-rate',
   ttsSystemVoice: 'ods:tts-system-voice',
+  advancedTts: 'ods:advanced-tts',
   showBalance: 'ods:show-balance',
 } as const
 
@@ -263,10 +271,12 @@ export const useSettings = create<Settings>(() => ({
   imageBaseUrl: read(KEYS.imageBaseUrl) ?? DEFAULT_IMAGE_BASE_URL,
   imageApiKey: read(KEYS.imageApiKey) ?? '',
     imageModel: read(KEYS.imageModel) ?? DEFAULT_IMAGE_MODEL,
+  imageProvider: read(KEYS.imageProvider) === 'local' ? 'local' : 'cloud',
   characterPrompt: read(KEYS.characterPrompt) ?? '',
   characterName: read(KEYS.characterName) ?? '',
   ttsRate: initialTtsRate(),
   ttsSystemVoice: read(KEYS.ttsSystemVoice) ?? '',
+  advancedTts: read(KEYS.advancedTts) === 'true',
   showBalance: read(KEYS.showBalance) !== '0',
 }))
 
@@ -351,6 +361,11 @@ export const setTtsSystemVoice = (ttsSystemVoice: string) => {
   useSettings.setState({ ttsSystemVoice })
 }
 
+export const setAdvancedTts = (advancedTts: boolean) => {
+  write(KEYS.advancedTts, String(advancedTts))
+  useSettings.setState({ advancedTts })
+}
+
 export const setShowBalance = (showBalance: boolean) => {
   write(KEYS.showBalance, showBalance ? '1' : '0')
   useSettings.setState({ showBalance })
@@ -423,6 +438,11 @@ export const setImageApiKey = (imageApiKey: string) => {
   useSettings.setState({ imageApiKey })
 }
 
+export const setImageProvider = (imageProvider: ImageProvider) => {
+  write(KEYS.imageProvider, imageProvider)
+  useSettings.setState({ imageProvider })
+}
+
 export const setImageModel = (imageModel: string) => {
   write(KEYS.imageModel, imageModel)
   useSettings.setState({ imageModel })
@@ -430,10 +450,15 @@ export const setImageModel = (imageModel: string) => {
 
 /**
  * 当前生效的系统提示词。
- * 全局提示词与角色卡各自独立，同时存在时按「全局 → 角色卡」拼接；都为空才回落官方默认。
+ * 系统提示词优先：填了系统提示词就只用它（角色卡不参与，避免两套设定打架）；
+ * 系统提示词为空时才用角色卡；两者都空回落官方默认。
  */
 export const resolveSystemPrompt = (): string => {
   const { systemPrompt, characterPrompt } = useSettings.getState()
-  const parts = [systemPrompt.trim(), characterPrompt.trim()].filter(Boolean)
-  return parts.length > 0 ? parts.join('\n\n') : DEFAULT_SYSTEM_PROMPT
+  const global = systemPrompt.trim()
+  if (global) {
+    return global
+  }
+  const card = characterPrompt.trim()
+  return card || DEFAULT_SYSTEM_PROMPT
 }

@@ -137,6 +137,14 @@ const Input = ({ sessionId }: { sessionId: string | null }) => {
   const canSend = !importingHistory && !streaming && voice.status === 'idle' && draftReady
 
   const send = () => {
+    // 指令触发：/img 或 /draw 开头直接弹生图，不发给模型
+    const raw = getDraft(sessionId).text.trim()
+    const command = /^\/(img|draw|pic)\s+([\s\S]+)$/i.exec(raw)
+    if (command && uiMode === 'plus') {
+      openImageDialog(command[2].trim())
+      setDraftText(sessionId, '')
+      return
+    }
     if (
       useChatStore.getState().importingHistory ||
       voice.status !== 'idle' ||
@@ -242,7 +250,7 @@ const Input = ({ sessionId }: { sessionId: string | null }) => {
               tone="primary"
               icon={<IconImageOutline16 />}
               tooltip={t('odsImageDialogTitle')}
-              onClick={openImageDialog}
+              onClick={() => openImageDialog()}
             />
           ) : null}
           <VoiceButton

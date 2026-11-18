@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import { useSettings } from '../../services/settings.js'
 
 /** 设置弹窗的分组：通用设置 / 扩展 / 数据管理 */
-export type SettingsSection = 'general' | 'ext' | 'usage' | 'data'
+export type SettingsSection = 'general' | 'ext' | 'usage' | 'lab' | 'data'
 
 /** 设置弹窗：侧边栏底部、没有 API Key 时的操作与 401 提示都可以打开；section 为打开时选中的分组 */
 /**
@@ -15,7 +15,11 @@ const hashSection = (): SettingsSection | null => {
     return null
   }
   const value = hash.split('=')[1]
-  return value === 'ext' || value === 'data' || value === 'usage' || value === 'general'
+  return value === 'ext' ||
+    value === 'data' ||
+    value === 'usage' ||
+    value === 'lab' ||
+    value === 'general'
     ? value
     : 'general'
 }

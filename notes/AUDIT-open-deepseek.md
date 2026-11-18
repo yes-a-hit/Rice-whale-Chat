@@ -33,42 +33,38 @@
 - ASR 是否也本地化（faster-whisper）→ 待定。
 - 生图后端：ComfyUI API（现有）还是自带 OpenVINO SD 管线 → 待定。
 
-## 状态（2026-11-18 18:24）
+## 状态（2026-11-18 18:34）
 
-### 用量与计费（本轮）
+### 本轮七条（全部落地）
 
-- `src/services/billing.ts`（新）：`DEFAULT_PRICE = { cacheHit: 0.2, input: 2, output: 3, search: 0.01 }`（元/百万 token、元/次），
-  `CONTEXT_LIMIT = 131_072`，`summarizeUsage()` 逐条累加 assistant 消息的 `usage` 与 `elapsedMs`。
-- 耗时：`AssistantMessage` 加 `startedAt` / `elapsedMs`，`settleReply` 收尾时算差值，供 tok/s 使用。
-- 底部状态条 `SessionStatsBar`（仅 Plus）：轮数 · 段数 · tok/s | token 总量 · 缓存命中率 | 金额 | 上下文占比。
-- 设置新增「用量」tab：四色堆叠条（绿 cache hit / 红 input / 蓝 output / 橙 search）+ 明细 + 速率 + 上下文。
-- 移动端四个 tab 收紧到 `min-width: 86px`，390px 宽正好放下。
+1. **系统提示词优先于角色卡**：`resolveSystemPrompt()` 改为「填了系统提示词就只用它」，系统提示词为空时才退回角色卡，两者都空才用官方默认。避免两套设定打架。
+2. **包名**：`com.opendeepseek.chat` → `com.ricewhale.chat`（`capacitor.config.json`、`android/app/build.gradle` 的 namespace/applicationId、`MainActivity.java` 移到 `com/ricewhale/chat/`、`strings.xml` 的 app_name / package_name / custom_url_scheme）。`aapt2 dump badging` 确认 `package: name='com.ricewhale.chat' application-label:'Rice Whale Chat'`。
+3. **极简模式保留深度思考**：`initialThinking` 在未经手动设置时对 lite 返回 true；联网搜索默认关；引导页文案改成明说这两点。
+4. **改名**：`odsModeLite` = 极简模式（en: Minimal），README 表格同步。
+5. **TTS 不再假装能用**：`engines/kokoro.ts` 注释写清 WebNN 拿不到 NPU、WebGPU 可能起不来；`readAloud.ts` 在配置为 kokoro 时直接回落 system 引擎并抛 `LOCAL_TTS_FALLBACK`，toast 提示「已改用系统朗读」。
+6. **生图**：新增 `imageProvider: 'cloud' | 'local'`；Plus 模式两个触发口——输入框图片按钮、`/img`（含 `/draw`、`/pic`）指令直达弹窗并预填提示词。
+7. **本地 NPU 生图通道**：`src/services/image/localPipeline.ts` 定义 `LocalImageStage`、`LocalImageOptions`（含 `onStage` 进度回调）、`LocalImageResult`，注释写明工作流 0.5B 提示词整理 → CLIP → SD-Turbo 1.5B → VAE → 落盘。`isLocalImageAvailable()` 检查 `globalThis.RiceWhaleBridge.localImage`，未接入时 `generateLocalImage()` 抛 `LOCAL_IMAGE_NOT_INSTALLED`。
 
-### 生成参数（参考 chat-demo-unrestricted）
+### 实验性玩法（新分组）
 
-- `safety_check` 从硬编码改为可选：`sendSafetyCheck` 默认关（= 请求里不带该字段，服务端按最低档）。
-- `temperature` / `top_p` / `max_tokens` 直调，`null` 表示不发送，设置里留空即恢复服务端默认。
-- UI 在「设置 → 扩展 → 生成参数」。
-- 与上游差异：上游 anti-retraction 那个开关我们直接做成默认行为（拦截整条链路已拆），不需要开关。
+设置从 4 个 tab 变 5 个：通用 / 扩展 / 用量 / **实验** / 数据。实验页收纳本地模型相关的一切：
+算力设备检测、朗读引擎（含 kokoro）、**进阶 TTS**、本地生图通道、模型下载源、本地模型管理。
 
-### 品牌与仓库
-
-- 项目名 `rice-whale-chat`，Android 应用名 `Rice Whale Chat`（appId 仍 `com.opendeepseek.chat`，改包名会让已装的应用变成孤儿）。
-- `origin` 指向 `https://github.com/yes-a-hit/Rice-whale-Chat`，上游保留为 `upstream`。
-- 已推三个 commit：工程脚手架 / 应用实现 / 文档与素材，最新 `af3661b`。
-- 三张梗图均为透明底 256 色 PNG：`welcome.png`（有 Key）、`hungry.png`（无 Key，「主人，奴家饿了」）、`wait.png`（余额不足提示里的小图）。
+- 进阶 TTS 实现 `src/services/speech/contextVoice.ts`：`matchVoiceProfile(text, baseRate)` 按问句/感叹/代码/列表/平叙给你 `{mood, rate, pitch}`；`stripUnreadable()` 把代码块换成「这里有一段代码，先跳过」、删表格行与 URL。`system.ts` 的 `speakOne` 改为接收 tuning。
+- 移动端 5 个 tab 收到 `min-width: 62px`、`font-size: 12.5px`，390px 宽全部放下（截图 `notes/lab-tab3.png`）。
 
 ### 验证
 
-`pnpm type` / `pnpm build` / `assembleRelease` 全通过。
-截图：`notes/hungry-key.png`（无 Key 欢迎页）、`notes/gen-ext.png`（生成参数）、`notes/usage-tab4.png`（用量 tab）。
-产物 `android/app/build/outputs/apk/release/app-release.apk`（6.55MB，v1.0.0-alpha.1）。
+`pnpm type` / `pnpm build` / `assembleRelease` 通过。产物 `android/app/build/outputs/apk/release/app-release.apk`（6.55MB，`com.ricewhale.chat`，v1.0.0-alpha.1）。
+
+### 注意
+
+- 改包名后是**新应用**，手机上原来那个 Open DeepSeek 不会自动升级，要手动卸载。
+- 签名仍是同一个 jks，但包名不同，Android 视为两个应用。
 
 ### 仍未完成
 
-- 计费的四色条只有空态截图，带数据的形态要等真机聊几轮再看
-- Kokoro-82M ONNX 推理与中文 G2P（`engines/kokoro.ts` 仍抛 `LOCAL_TTS_NOT_INSTALLED`）
-- 原生 NPU 插件（ONNX Runtime Mobile QNN EP）
+- 本地 NPU 生图与本地 TTS 都只有接口，需要原生插件（ONNX Runtime Mobile + QNN EP）
 - 真机实测
 
 ## 构建

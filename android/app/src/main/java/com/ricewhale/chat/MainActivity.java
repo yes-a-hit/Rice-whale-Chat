@@ -1,4 +1,4 @@
-package com.opendeepseek.chat;
+package com.ricewhale.chat;
 
 import com.getcapacitor.BridgeActivity;
 

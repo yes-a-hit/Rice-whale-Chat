@@ -21,10 +21,10 @@ if (hasReleaseKey) {
 }
 
 android {
-    namespace "com.opendeepseek.chat"
+    namespace "com.ricewhale.chat"
     compileSdk rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "com.opendeepseek.chat"
+        applicationId "com.ricewhale.chat"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode appVersionCode

@@ -8,35 +8,27 @@ import {
   resolveSystemPrompt,
   setApiBaseUrl,
   setAsrEngine,
-  setComputeDevice,
   setFontScale,
   setImageApiKey,
   setImageBaseUrl,
   setImageEnabled,
   setImageModel,
-  setModelSource,
   setSearch,
   setSendSafetyCheck,
   setSamplingParam,
   setSkin,
   setSystemPrompt,
   setThinking,
-  setTtsEngine,
   setTtsRate,
   setTtsSystemVoice,
   setTtsVoice,
   setUiMode,
   useSettings,
   type AsrEngine,
-  type ComputeDevice,
-  type ModelSource,
-  type TtsEngine,
   type UiMode,
 } from '../../services/settings.js'
-import { detectCapabilities, resolveBackend, type ComputeCapabilities } from '../../services/device.js'
 import { SKINS, type SkinId } from '../../app/skins.js'
 import { SettingCell } from './SettingCell.js'
-import { ModelsSection } from './ModelsSection.js'
 import { CharacterCardSetting } from './CharacterCardSetting.js'
 import styles from './Ext.module.css'
 
@@ -416,32 +408,9 @@ const TtsFineTuning = () => {
 
 const VoiceSettings = () => {
   const t = useTranslate()
-  const ttsEngine = useSettings((state) => state.ttsEngine)
   const asrEngine = useSettings((state) => state.asrEngine)
-  const computeDevice = useSettings((state) => state.computeDevice)
-  const modelSource = useSettings((state) => state.modelSource)
-  const [caps, setCaps] = useState<ComputeCapabilities | null>(null)
-  const [detecting, setDetecting] = useState(false)
   return (
     <>
-      <SettingCell
-        label={t('odsTtsEngine')}
-        description={t('odsTtsEngineHint')}
-        status={null}
-        action={
-          <Select<TtsEngine>
-            ariaLabel={t('odsTtsEngine')}
-            value={ttsEngine}
-            options={[
-              { value: 'system', label: t('odsTtsSystem') },
-              { value: 'kokoro', label: t('odsTtsKokoro') },
-              { value: 'cloud', label: t('odsTtsCloud') },
-            ]}
-            onChange={setTtsEngine}
-          />
-        }
-      />
-      <TtsFineTuning />
       <SettingCell
         label={t('odsAsrEngine')}
         description={t('odsAsrEngineHint')}
@@ -459,68 +428,7 @@ const VoiceSettings = () => {
           />
         }
       />
-      <SettingCell
-        label={t('odsComputeDevice')}
-        description={
-          caps
-            ? t('odsDetectResult', {
-                npu: caps.webnnNpu ? '✓' : '✗',
-                gpu: caps.webgpu ? '✓' : '✗',
-                simd: caps.wasmSimd ? '✓' : '✗',
-                resolved: resolveBackend(computeDevice, caps),
-                cores: caps.hardwareConcurrency,
-              })
-            : t('odsComputeDeviceHint')
-        }
-        status={null}
-        stacked
-        action={
-          <div className={styles.fieldRow}>
-            <Select<ComputeDevice>
-              ariaLabel={t('odsComputeDevice')}
-              value={computeDevice}
-              options={[
-                { value: 'auto', label: t('odsDeviceAuto') },
-                { value: 'npu', label: t('odsDeviceNpu') },
-                { value: 'gpu', label: t('odsDeviceGpu') },
-                { value: 'cpu', label: t('odsDeviceCpu') },
-              ]}
-              onChange={setComputeDevice}
-            />
-            <button
-              type="button"
-              className={styles.ghostButton}
-              disabled={detecting}
-              onClick={() => {
-                setDetecting(true)
-                void detectCapabilities()
-                  .then(setCaps)
-                  .finally(() => setDetecting(false))
-              }}
-            >
-              {detecting ? t('odsDetecting') : t('odsDetect')}
-            </button>
-          </div>
-        }
-      />
-      <SettingCell
-        label={t('odsModelSource')}
-        description={t('odsModelSourceHint')}
-        status={null}
-        action={
-          <Select<ModelSource>
-            ariaLabel={t('odsModelSource')}
-            value={modelSource}
-            options={[
-              { value: 'hf-mirror', label: t('odsSourceHfMirror') },
-              { value: 'huggingface', label: t('odsSourceHf') },
-              { value: 'kaggle', label: t('odsSourceKaggle') },
-              { value: 'manual', label: t('odsSourceManual') },
-            ]}
-            onChange={setModelSource}
-          />
-        }
-      />
+      <TtsFineTuning />
     </>
   )
 }
@@ -586,7 +494,6 @@ export const ExtSettings = () => (
     <CharacterCardSetting />
     <AppearanceSettings />
     <VoiceSettings />
-    <ModelsSection />
     <ImageSettings />
   </>
 )

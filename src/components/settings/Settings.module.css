@@ -317,11 +317,12 @@
   .navItem {
     flex: 1 0 auto;
     justify-content: center;
-    gap: 6px;
+    gap: 4px;
     width: auto;
-    min-width: 86px;
+    min-width: 62px;
     margin: 0;
-    padding: 9px 8px;
+    padding: 9px 6px;
+    font-size: 12.5px;
     white-space: nowrap;
 
     &:first-child {

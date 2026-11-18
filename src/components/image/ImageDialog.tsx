@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Button } from '../base/Button.js'
 import { Modal } from '../base/Modal.js'
 import { Select } from '../base/Select.js'
@@ -15,12 +15,20 @@ const SIZES = ['1024x1024', '1024x1536', '1536x1024']
 export const ImageDialog = () => {
   const t = useTranslate()
   const open = useImageDialog((state) => state.open)
+  const seeded = useImageDialog((state) => state.prompt)
   const imageEnabled = useSettings((state) => state.imageEnabled)
   const [prompt, setPrompt] = useState('')
   const [size, setSize] = useState(SIZES[0])
   const [status, setStatus] = useState<'idle' | 'loading' | 'error'>('idle')
   const [result, setResult] = useState<string | null>(null)
   const [error, setError] = useState('')
+
+  // 指令触发（/img ...）时预填提示词
+  useEffect(() => {
+    if (open && seeded) {
+      setPrompt(seeded)
+    }
+  }, [open, seeded])
 
   if (!open) {
     return null

@@ -34,6 +34,7 @@ import { ApiKeyConfirm, ApiKeyField, useApiKeyEditor } from './ApiKeyField.js'
 import { DataSection } from './DataSection.js'
 import { ExtSettings } from './ExtSettings.js'
 import { UsageSection } from './UsageSection.js'
+import { LabSettings } from './LabSettings.js'
 import { errorStatus, SettingCell, type Status } from './SettingCell.js'
 import { closeSettings, useSettingsDialog, type SettingsSection } from './settingsDialogState.js'
 import styles from './Settings.module.css'
@@ -55,6 +56,7 @@ const sections: { value: SettingsSection; label: TranslationKey; icon: ReactNode
   },
   { value: 'ext', label: 'odsExtSection', icon: <IconEditOutline16 /> },
   { value: 'usage', label: 'odsUsageSection', icon: <IconChartOutline16 /> },
+  { value: 'lab', label: 'odsLabSection', icon: <IconChartOutline16 /> },
   { value: 'data', label: 'settingDialogAsideDataOptionLabel', icon: <IconDataOutline16 /> },
 ]
 
@@ -102,6 +104,8 @@ const SettingsContent = () => {
             <ExtSettings />
           ) : section === 'usage' ? (
             <UsageSection />
+          ) : section === 'lab' ? (
+            <LabSettings />
           ) : section === 'general' ? (
             <>
               <ThemeSetting />

@@ -1,4 +1,5 @@
 import { useSettings } from '../settings.js'
+import { generateLocalImage } from './localPipeline.js'
 
 /**
  * 生图：BYOK，OpenAI 兼容的 `/images/generations` 接口。
@@ -28,12 +29,29 @@ type Response = {
 }
 
 export const isImageReady = () => {
-  const { imageEnabled, imageApiKey, imageBaseUrl } = useSettings.getState()
-  return imageEnabled && Boolean(imageApiKey) && Boolean(imageBaseUrl)
+  const { imageEnabled, imageApiKey, imageBaseUrl, imageProvider } = useSettings.getState()
+  if (!imageEnabled) {
+    return false
+  }
+  // 本地通道不吃 BYOK，等原生桥接通才算就绪
+  if (imageProvider === 'local') {
+    return false
+  }
+  return Boolean(imageApiKey) && Boolean(imageBaseUrl)
 }
 
-export const generateImage = async ({ prompt, size = '1024x1024', signal }: GenerateOptions) => {
-  const { imageBaseUrl, imageApiKey, imageModel } = useSettings.getState()
+export const generateImage = async ({
+  prompt,
+  size = '1024x1024',
+  signal,
+}: GenerateOptions): Promise<{ dataUrl: string; source: 'b64' | 'url' | 'local' }> => {
+  const { imageBaseUrl, imageApiKey, imageModel, imageProvider } = useSettings.getState()
+
+  if (imageProvider === 'local') {
+    const result = await generateLocalImage({ prompt, size, signal })
+    return { dataUrl: result.dataUrl, source: 'local' }
+  }
+
   if (!imageApiKey) {
     throw new ImageError('image api key is empty')
   }

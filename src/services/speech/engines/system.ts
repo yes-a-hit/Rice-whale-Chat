@@ -1,4 +1,5 @@
 import { useSettings } from '../../settings.js'
+import { matchVoiceProfile, stripUnreadable } from '../contextVoice.js'
 import type { SpeakContext, TtsEngine } from './types.js'
 
 /**
@@ -51,15 +52,17 @@ const pickVoice = (): SpeechSynthesisVoice | undefined => {
   return zh.find((voice) => voice.localService) ?? zh[0] ?? voices[0]
 }
 
-const speakOne = (text: string, voice: SpeechSynthesisVoice | undefined) =>
+type SpeakTuning = { rate: number; pitch: number }
+
+const speakOne = (text: string, voice: SpeechSynthesisVoice | undefined, tuning: SpeakTuning) =>
   new Promise<void>((resolve, reject) => {
     const utterance = new SpeechSynthesisUtterance(text)
     if (voice) {
       utterance.voice = voice
       utterance.lang = voice.lang
     }
-    utterance.rate = useSettings.getState().ttsRate
-    utterance.pitch = 1
+    utterance.rate = tuning.rate
+    utterance.pitch = tuning.pitch
     utterance.onend = () => resolve()
     utterance.onerror = (event) => {
       // 被取消不算失败
@@ -79,7 +82,12 @@ export const systemTts: TtsEngine = {
     if (!('speechSynthesis' in window)) {
       throw new Error('speechSynthesis is not available on this device')
     }
-    const chunks = splitSentences(text)
+    const { ttsRate, advancedTts } = useSettings.getState()
+    // 进阶 TTS：按上下文挑语速/音高，并把代码、表格、链接换成口播话术
+    const spoken = advancedTts ? stripUnreadable(text) : text
+    const profile = advancedTts ? matchVoiceProfile(spoken, ttsRate) : null
+    const tuning: SpeakTuning = { rate: profile?.rate ?? ttsRate, pitch: profile?.pitch ?? 1 }
+    const chunks = splitSentences(spoken)
     if (chunks.length === 0) {
       return
     }
@@ -94,7 +102,7 @@ export const systemTts: TtsEngine = {
         started = true
         ctx.onStart()
       }
-      await speakOne(chunk, voice)
+      await speakOne(chunk, voice, tuning)
     }
   },
 }

@@ -64,8 +64,11 @@ export const stopReadAloud = () => {
 }
 
 export const describeReadAloudError = (error: unknown): TranslationMessage | string => {
-  if (error instanceof Error && error.message === 'LOCAL_TTS_NOT_INSTALLED') {
-    return { key: 'odsLocalTtsMissing' }
+  if (
+    error instanceof Error &&
+    (error.message === 'LOCAL_TTS_NOT_INSTALLED' || error.message === 'LOCAL_TTS_FALLBACK')
+  ) {
+    return { key: 'odsLocalTtsFallback' }
   }
   if (error instanceof Error && /speechSynthesis/i.test(error.message)) {
     return { key: 'odsSystemTtsUnavailable' }
@@ -105,7 +108,12 @@ export const toggleReadAloud = (
   }
   const controller = new AbortController()
   current = { controller }
-  const engineId = useSettings.getState().ttsEngine
+  const configured = useSettings.getState().ttsEngine
+  // 本地模型引擎没接运行时之前必然不可用，直接回落系统朗读，不让用户点了没反应
+  const engineId = configured === 'kokoro' ? 'system' : configured
+  if (engineId !== configured) {
+    onError(new Error('LOCAL_TTS_FALLBACK'))
+  }
   useReadAloud.setState({ messageId, status: 'loading', engine: engineId })
   const engine = engineFor(engineId)
   const { computeDevice, apiBaseUrl } = useSettings.getState()

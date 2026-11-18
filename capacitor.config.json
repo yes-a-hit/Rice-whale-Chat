@@ -1,5 +1,5 @@
 {
-  "appId": "com.opendeepseek.chat",
+  "appId": "com.ricewhale.chat",
   "appName": "Rice Whale Chat",
   "webDir": "dist",
   "android": {
