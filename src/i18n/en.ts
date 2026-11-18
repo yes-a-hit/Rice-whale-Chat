@@ -360,4 +360,8 @@ export const en = {
   odsTailInstruction: 'Post-history instruction',
   odsTailInstructionHint: 'Appended after the auxiliary prompt, for format or closing constraints',
   odsTailInstructionPlaceholder: 'e.g. Keep it under 300 words, lead with the conclusion',
+  odsNpuNativeReady: 'Native bridge present: QNN / NNAPI available',
+  odsNpuNoWebnn: 'No WebNN in this WebView: NPU needs native code, Web can only use WebGPU',
+  odsNpuNoDevice: 'WebNN exists but only CPU/GPU: true NPU needs a native plugin',
+  odsNpuOk: 'Browser-level NPU available',
 } satisfies Record<keyof typeof zh, string>

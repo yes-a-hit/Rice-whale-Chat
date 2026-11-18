@@ -14,7 +14,12 @@ import {
   type ModelSource,
   type TtsEngine,
 } from '../../services/settings.js'
-import { detectCapabilities, resolveBackend, type ComputeCapabilities } from '../../services/device.js'
+import {
+  detectCapabilities,
+  explainCompute,
+  resolveBackend,
+  type ComputeCapabilities,
+} from '../../services/device.js'
 import { isLocalImageAvailable } from '../../services/image/localPipeline.js'
 import { SettingCell } from './SettingCell.js'
 import { ModelsSection } from './ModelsSection.js'
@@ -48,13 +53,20 @@ export const LabSettings = () => {
         label={t('odsComputeDevice')}
         description={
           caps
-            ? t('odsDetectResult', {
-                npu: caps.webnnNpu ? '✓' : '✗',
-                gpu: caps.webgpu ? '✓' : '✗',
-                simd: caps.wasmSimd ? '✓' : '✗',
-                resolved: resolveBackend(computeDevice, caps),
-                cores: caps.hardwareConcurrency,
-              })
+            ? `WebNN ${caps.webnn ? '✓' : '✗'} · NPU ${caps.webnnNpu ? '✓' : '✗'} · WebGPU ${
+                caps.webgpu ? '✓' : '✗'
+              } · SIMD ${caps.wasmSimd ? '✓' : '✗'} · ${caps.hardwareConcurrency} 线程 → 实际 ${resolveBackend(
+                computeDevice,
+                caps
+              )}\n${t(
+                explainCompute(caps) === 'native'
+                  ? 'odsNpuNativeReady'
+                  : explainCompute(caps) === 'no-webnn'
+                    ? 'odsNpuNoWebnn'
+                    : explainCompute(caps) === 'no-npu-device'
+                      ? 'odsNpuNoDevice'
+                      : 'odsNpuOk'
+              )}`
             : t('odsComputeDeviceHint')
         }
         status={null}

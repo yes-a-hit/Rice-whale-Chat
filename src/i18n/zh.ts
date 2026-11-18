@@ -351,4 +351,8 @@ export const zh = {
   odsTailInstruction: '历史后指令',
   odsTailInstructionHint: '跟在辅助提示词后面，用于强制格式或收尾要求',
   odsTailInstructionPlaceholder: '例如：回答控制在 300 字以内，先给结论',
+  odsNpuNativeReady: '原生桥已就绪，可以走 QNN / NNAPI 真 NPU 推理',
+  odsNpuNoWebnn: '浏览器没有 WebNN：NPU 只能从原生代码调用，Web 侧最多用 WebGPU（Adreno）',
+  odsNpuNoDevice: '有 WebNN 但浏览器只开放 CPU/GPU：Android 上 npu 设备类型不可用，真 NPU 要走原生插件',
+  odsNpuOk: '浏览器直连 NPU 可用',
 } as const
