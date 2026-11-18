@@ -55,8 +55,16 @@
 @media not all and (min-width: 768px) {
   .frame {
     position: fixed;
-    top: var(--app-viewport-top, 0px);
+    /* zoom 会把 px 等比放大，视口高度是物理像素，这里要除回倍率 */
+    top: calc(var(--app-viewport-top, 0px) / var(--ods-zoom, 1));
+    left: 0;
+    right: 0;
     bottom: auto;
-    height: var(--app-viewport-height, 100dvh);
+    width: auto;
+    height: calc(var(--app-viewport-height, 100dvh) / var(--ods-zoom, 1));
+    /* 刘海屏与手势条：内容不贴边 */
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    box-sizing: border-box;
   }
 }

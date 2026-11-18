@@ -92,6 +92,10 @@ export type AssistantMessage = MessageBranch & {
   stopDetails?: StopDetails
   /** 最近一次请求的用量，续写后更新 */
   usage?: MessageUsage
+  /** 本轮从发请求到收尾的耗时（毫秒），用于算 token 速率 */
+  elapsedMs?: number
+  /** 请求发出时刻，settleReply 用它算 elapsedMs */
+  startedAt?: number
   error?: {
     /** upload：发送前补传附件失败，请求没有发出 */
     kind: ApiErrorKind | 'upload'

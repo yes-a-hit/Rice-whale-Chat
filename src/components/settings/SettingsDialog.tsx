@@ -2,7 +2,9 @@ import clsx from 'clsx'
 import { useRef, useState, type ReactNode } from 'react'
 import {
   IconDarkOutline16,
+  IconChartOutline16,
   IconDataOutline16,
+  IconEditOutline16,
   IconDownloadOutline16,
   IconFollowsystemOutline16,
   IconLightOutline16,
@@ -10,29 +12,29 @@ import {
   IconUploadOutline14,
 } from '../base/icons.js'
 import {
-  BackupError,
   clearHistory,
   exportHistory,
   importHistory,
 } from '../../services/chat/backup.js'
 import { useIsMobile } from '../../app/viewport.js'
 import { useChatStore } from '../../services/chat/store.js'
-import { regionCodes, getRegionName, provinces } from '../../services/location.js'
 import {
-  isChineseBrowser,
   setLocale,
-  setLocation,
   setThemePreference,
   setTtsVoice,
   useSettings,
   type ThemePreference,
 } from '../../services/settings.js'
-import { useTranslate, type TranslationKey, type TranslationMessage } from '../../i18n/index.js'
+import { useTranslate, type TranslationKey } from '../../i18n/index.js'
 import { Button } from '../base/Button.js'
 import { Modal } from '../base/Modal.js'
 import { Select } from '../base/Select.js'
 import { showToast } from '../base/toastState.js'
 import { ApiKeyConfirm, ApiKeyField, useApiKeyEditor } from './ApiKeyField.js'
+import { DataSection } from './DataSection.js'
+import { ExtSettings } from './ExtSettings.js'
+import { UsageSection } from './UsageSection.js'
+import { errorStatus, SettingCell, type Status } from './SettingCell.js'
 import { closeSettings, useSettingsDialog, type SettingsSection } from './settingsDialogState.js'
 import styles from './Settings.module.css'
 
@@ -51,6 +53,8 @@ const sections: { value: SettingsSection; label: TranslationKey; icon: ReactNode
     label: 'settingDialogAsideGeneralOptionLabel',
     icon: <IconSettingsOutline16 />,
   },
+  { value: 'ext', label: 'odsExtSection', icon: <IconEditOutline16 /> },
+  { value: 'usage', label: 'odsUsageSection', icon: <IconChartOutline16 /> },
   { value: 'data', label: 'settingDialogAsideDataOptionLabel', icon: <IconDataOutline16 /> },
 ]
 
@@ -94,15 +98,19 @@ const SettingsContent = () => {
           ))}
         </div>
         <div role="tabpanel" className={styles.content}>
-          {section === 'general' ? (
+          {section === 'ext' ? (
+            <ExtSettings />
+          ) : section === 'usage' ? (
+            <UsageSection />
+          ) : section === 'general' ? (
             <>
               <ThemeSetting />
               <LocaleSetting />
               <TtsVoiceSetting />
-              <LocationSetting />
             </>
           ) : (
             <>
+              <DataSection />
               <ApiKeyField editor={apiKeyEditor} />
               <ImportHistory historyImport={historyImport} disabled={historyBusy} />
               <ExportHistory disabled={historyBusy} />
@@ -205,69 +213,6 @@ const useHistoryDelete = () => {
   }
 }
 
-const LocationSetting = () => {
-  const t = useTranslate()
-  const locale = useSettings((state) => state.locale)
-  const location = useSettings((state) => state.location)
-  const province =
-    location?.region === 'CN'
-      ? provinces.find((item) => item.code === location.province)
-      : undefined
-
-  return (
-    <SettingCell
-      label={t('settingsLocation')}
-      status={null}
-      className={styles.locationCell}
-      action={
-        <div className={styles.locationSelectors}>
-          {isChineseBrowser() ? (
-            <>
-              <Select
-                ariaLabel={t('settingsLocationProvince')}
-                className={styles.provinceSelect}
-                value={province?.code ?? ''}
-                placeholder={t('settingsLocationProvince')}
-                options={provinces.map((item) => ({ value: item.code, label: item.name }))}
-                onChange={(value) => {
-                  if (value !== province?.code) {
-                    setLocation({ region: 'CN', province: value })
-                  }
-                }}
-              />
-              <Select
-                ariaLabel={t('settingsLocationCity')}
-                className={styles.citySelect}
-                value={province ? (location?.city ?? '') : ''}
-                disabled={!province?.cities.length}
-                placeholder={t('settingsLocationCity')}
-                options={
-                  province?.cities.map((item) => ({ value: item.code, label: item.name })) ?? []
-                }
-                onChange={(value) => {
-                  if (province) {
-                    setLocation({ region: 'CN', province: province.code, city: value })
-                  }
-                }}
-              />
-            </>
-          ) : (
-            <Select
-              ariaLabel={t('settingsLocationRegion')}
-              className={styles.regionSelect}
-              value={location?.region ?? ''}
-              placeholder={t('settingsLocationRegion')}
-              options={regionCodes
-                .map((code) => ({ value: code, label: getRegionName(code, locale) }))
-                .sort((a, b) => a.label.localeCompare(b.label, locale))}
-              onChange={(value) => setLocation({ region: value })}
-            />
-          )}
-        </div>
-      }
-    />
-  )
-}
 
 const LocaleSetting = () => {
   const t = useTranslate()
@@ -389,49 +334,6 @@ const ThemeSetting = () => {
           </button>
         ))}
       </div>
-    </div>
-  )
-}
-
-/** `reason` 为失败原因的文案 key，展示时按当前语言翻译后填入 `message` 参数。 */
-type Status = (TranslationMessage & { error?: boolean; reason?: TranslationKey }) | null
-
-/** 导出失败附带原因：预期的错误用对应文案作原因，其他错误用错误信息。 */
-const errorStatus = (key: TranslationKey, error: unknown): Status => ({
-  key,
-  ...(error instanceof BackupError
-    ? { reason: error.key }
-    : { params: { message: error instanceof Error ? error.message : String(error) } }),
-  error: true,
-})
-
-const SettingCell = ({
-  label,
-  description,
-  status,
-  action,
-  className,
-}: {
-  label: string
-  description?: string
-  status: Status
-  action: ReactNode
-  className?: string
-}) => {
-  const t = useTranslate()
-  return (
-    <div className={clsx(styles.cell, styles.row, className)}>
-      <div className={styles.text}>
-        <div className={styles.label}>{label}</div>
-        {status || description ? (
-          <div className={clsx(styles.description, status?.error && styles.error)}>
-            {status
-              ? t(status.key, status.reason ? { message: t(status.reason) } : status.params)
-              : description}
-          </div>
-        ) : null}
-      </div>
-      {action}
     </div>
   )
 }

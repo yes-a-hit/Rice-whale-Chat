@@ -1,0 +1,50 @@
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: min(420px, 80vw);
+}
+
+.prompt {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--dsw-alias-border-l2);
+  border-radius: 10px;
+  background: var(--dsw-specific-login-input);
+  color: var(--dsw-alias-label-primary);
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.5;
+  resize: vertical;
+  outline: none;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.rowLabel {
+  font-size: 14px;
+  color: var(--dsw-alias-label-secondary);
+}
+
+.error {
+  font-size: 13px;
+  color: var(--dsw-alias-state-error-primary);
+  word-break: break-all;
+}
+
+.preview {
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid var(--dsw-alias-border-l2);
+}
+
+.hint {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--dsw-alias-label-secondary);
+}

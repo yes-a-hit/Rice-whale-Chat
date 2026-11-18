@@ -16,6 +16,36 @@
   padding: 0 32px 64px;
 }
 
+.mascot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  margin: 0 0 21px;
+}
+
+.mascotImage {
+  width: min(340px, 74vw);
+  max-height: 44vh;
+  object-fit: contain;
+  /* 素材已去白底，透明区域直接透出页面背景，不再需要圆角遮罩 */
+  background: none;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.keyButton {
+  border: none;
+  border-radius: 100px;
+  padding: 10px 22px;
+  background-color: var(--dsw-alias-button-primary-fill);
+  color: var(--dsw-static-neutral-bluish-00);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
 .greeting {
   display: flex;
   align-items: center;
@@ -48,6 +78,16 @@
     max-width: none;
     margin: 0;
     padding: 0 16px env(safe-area-inset-bottom);
+  }
+
+  .mascot {
+    flex-shrink: 0;
+    margin: auto 0 18px;
+  }
+
+  .mascotImage {
+    width: min(340px, 82vw);
+    max-height: 56vh;
   }
 
   .greeting {

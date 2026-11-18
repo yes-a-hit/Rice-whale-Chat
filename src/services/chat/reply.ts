@@ -138,7 +138,8 @@ export const applyEvent = (
 
 /**
  * 回复结束：未结束的思考块以当前时间收尾。
- * 安全拒绝（stop_reason: refusal）时已下发的思考与正文不能撤回，按协议要求由客户端丢弃，只保留工具块。
+ * 官方 demo 会在 stop_reason 为 refusal 时丢弃已下发的思考与正文（按协议由客户端裁掉）；
+ * 这里保留全部内容——服务端已经下发的字就是用户要看的字。
  */
 export const settleReply = (
   reply: AssistantMessage,
@@ -149,14 +150,12 @@ export const settleReply = (
   ...reply,
   status,
   error,
-  blocks: reply.blocks.flatMap((block): ReplyBlock[] => {
-    if (reply.stopReason === 'refusal' && (block.type === 'thinking' || block.type === 'text')) {
-      return []
-    }
-    return block.type === 'thinking' && block.startedAt !== undefined && block.endedAt === undefined
-      ? [{ ...block, endedAt: now }]
-      : [block]
-  }),
+  elapsedMs: reply.elapsedMs ?? (reply.startedAt ? Math.max(0, now - reply.startedAt) : undefined),
+  blocks: reply.blocks.map((block): ReplyBlock =>
+    block.type === 'thinking' && block.startedAt !== undefined && block.endedAt === undefined
+      ? { ...block, endedAt: now }
+      : block
+  ),
 })
 
 /** 回复里所有文本块拼起来，用于复制与判断是否有回答 */
@@ -172,7 +171,6 @@ export const getReplyText = (reply: AssistantMessage) =>
 export const canContinueReply = (reply: AssistantMessage): boolean => {
   if (
     !reply.prefix ||
-    reply.stopReason === 'refusal' ||
     reply.stopReason === 'tool_use' ||
     reply.blocks.some(
       (block) =>
@@ -191,13 +189,12 @@ export const canContinueReply = (reply: AssistantMessage): boolean => {
 }
 
 /**
- * 已结束或停止且有回答文本的回复才放进上下文；被安全拒绝的轮次不回传。
+ * 已结束或停止且有回答文本的回复才放进上下文。
  * 服务端模板提示不进入上下文。
  */
 const isUsableReply = (message: Message): message is AssistantMessage =>
   message.role === 'assistant' &&
   (message.status === 'done' || message.status === 'stopped') &&
-  message.stopReason !== 'refusal' &&
   !message.blocks.some((block) => block.type === 'text' && block.isTemplate) &&
   getReplyText(message) !== ''
 

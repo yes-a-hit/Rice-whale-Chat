@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslate } from '../i18n/index.js'
 import { useSettings } from '../services/settings.js'
 import { useIsMobile, useMobileViewport, usePreventPageScroll } from './viewport.js'
@@ -20,16 +20,25 @@ import { Toast } from '../components/base/Toast.js'
 import { showToast } from '../components/base/toastState.js'
 import { onUploadNotice } from '../services/attachments.js'
 import { Button } from '../components/base/Button.js'
-import { stopReadAloud } from '../services/speech/readAloud.js'
+import {
+  describeReadAloudError,
+  stopReadAloud,
+  toggleReadAloud,
+} from '../services/speech/readAloud.js'
+import { onReplyDone } from '../services/chat/replyEvents.js'
+import { getReplyText } from '../services/chat/reply.js'
 import { CollapsedSider } from '../components/sider/CollapsedSider.js'
 import { closeMobileSider } from '../components/sider/mobileSiderState.js'
 import { MobileSider, Sider } from '../components/sider/Sider.js'
+import { Onboarding } from '../components/onboarding/Onboarding.js'
+import { ImageDialog } from '../components/image/ImageDialog.js'
 import styles from './App.module.css'
 
 export const App = () => {
   const t = useTranslate()
   const isMobile = useIsMobile()
   const locale = useSettings((state) => state.locale)
+  const onboarded = useSettings((state) => state.onboarded)
   // 移动端侧边栏以独立抽屉管理开合状态
   const siderCollapsed = useSettings((state) => state.siderCollapsed) && !isMobile
   const ready = useChatStore((state) => state.ready)
@@ -44,6 +53,8 @@ export const App = () => {
   const sessionLoadError = useChatStore((state) =>
     state.activeId === null ? false : state.sessionLoadErrors[state.activeId] === true
   )
+  // `#preview` 跳过 IndexedDB 等待，直接看欢迎页布局（调试用，不影响正常流程）
+  const previewWelcome = globalThis.location?.hash === '#preview'
   const frameRef = useMobileViewport(isMobile)
   const streaming = useChatStore((state) =>
     state.activeId === null ? false : Object.hasOwn(state.streaming, state.activeId)
@@ -51,6 +62,16 @@ export const App = () => {
   const activeId = useChatStore((state) => state.activeId)
 
   usePreventPageScroll(isMobile)
+
+  // IndexedDB 打不开时不至于永远转圈：给一个手动重载的出口
+  const [slowLoad, setSlowLoad] = useState(false)
+  useEffect(() => {
+    if (ready) {
+      return
+    }
+    const timer = window.setTimeout(() => setSlowLoad(true), 3000)
+    return () => window.clearTimeout(timer)
+  }, [ready])
 
   useEffect(() => {
     document.documentElement.lang = locale
@@ -69,9 +90,37 @@ export const App = () => {
 
   useEffect(() => {
     void initChat()
-    // 首次打开先在设置里输入 API Key
-    ensureApiKey()
   }, [])
+
+  // 选完模式、或已有配置但还没填 Key 时，才引导去设置
+  useEffect(() => {
+    if (onboarded) {
+      ensureApiKey()
+    }
+  }, [onboarded])
+
+  // Lite 模式：回复完成后自动朗读，长辈不用去找小喇叭按钮
+  useEffect(
+    () =>
+      onReplyDone((sessionId, messageId) => {
+        if (useSettings.getState().uiMode !== 'lite') {
+          return
+        }
+        const state = useChatStore.getState()
+        if (state.activeId !== sessionId) {
+          return
+        }
+        const message = state.sessionCache[sessionId]?.messages.find((item) => item.id === messageId)
+        if (!message || message.role !== 'assistant') {
+          return
+        }
+        const text = getReplyText(message)
+        if (text.trim()) {
+          toggleReadAloud(messageId, text, (error) => showToast(describeReadAloudError(error)))
+        }
+      }),
+    []
+  )
 
   return (
     <>
@@ -93,7 +142,9 @@ export const App = () => {
           ) : null}
           <div className={styles.content}>
             {siderCollapsed ? <CollapsedSider /> : null}
-            {!ready || (activeId !== null && !session) ? (
+            {previewWelcome ? (
+              <Welcome />
+            ) : !ready || (activeId !== null && !session) ? (
               <div className={styles.loadingView}>
                 {isMobile ? <MobileHeader /> : null}
                 <div className={styles.loadingState} role="status" aria-live="polite">
@@ -116,6 +167,10 @@ export const App = () => {
                     >
                       {t('retry')}
                     </Button>
+                  ) : slowLoad ? (
+                    <Button variant="outlined" size="m" onClick={() => location.reload()}>
+                      {t('retry')}
+                    </Button>
                   ) : null}
                 </div>
               </div>
@@ -134,6 +189,8 @@ export const App = () => {
       </div>
       <SettingsDialog />
       <Toast />
+      <ImageDialog />
+      {onboarded ? null : <Onboarding />}
     </>
   )
 }

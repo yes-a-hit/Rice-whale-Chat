@@ -49,10 +49,7 @@ export const describeReply = (reply: AssistantMessage): Notice | null => {
   if (reply.status === 'error' && template) {
     return { text: template }
   }
-  if (reply.stopReason === 'refusal') {
-    // 导入的拒绝回复优先展示归档中的模板，普通正文仍不可展示。
-    return { text: template || translate('replyRefused'), presentation: 'response' }
-  }
+  // stop_reason 为 refusal 时正文已经保留并正常展示，不再贴固定拒答话术。
   if (template) {
     return { text: template, presentation: 'response' }
   }

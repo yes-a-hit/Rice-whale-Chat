@@ -47,9 +47,8 @@ export const AssistantMessage = memo(function AssistantMessage({
   const view = useReplyView(message, streaming)
   const panelEntry = useSearchPanel((state) => state.entry)
   const notice = streaming ? null : describeReply(message)
-  // 安全拒绝：已下发的思考与正文按协议丢弃，只显示模板答复。
-  const refused = message.stopReason === 'refusal'
-  const answer = refused ? null : view.answer
+  // 官方 demo 会把 refusal 轮的正文与思考整段藏起来；这里照常展示。
+  const answer = view.answer
   const responseText = [answer?.text, notice?.presentation === 'response' ? notice.text : null]
     .filter(Boolean)
     .join('\n\n')
@@ -58,14 +57,12 @@ export const AssistantMessage = memo(function AssistantMessage({
   const summaryEntry = `${message.id}-summary`
   return (
     <div className={styles.message}>
-      {refused ? null : (
-        <ReplyArea
-          message={message}
-          view={view}
-          streaming={streaming}
-          hasResponse={!!responseText}
-        />
-      )}
+      <ReplyArea
+        message={message}
+        view={view}
+        streaming={streaming}
+        hasResponse={!!responseText}
+      />
       {answer ? (
         <Markdown
           className="ds-assistant-message-main-content"
@@ -93,7 +90,11 @@ export const AssistantMessage = memo(function AssistantMessage({
         />
       ) : notice ? (
         <div className={styles.notice}>
-          <IconWarningOutline16 />
+          {notice.action === 'topUp' ? (
+            <img className={styles.noticeArt} src="/media/wait.png" alt="" aria-hidden />
+          ) : (
+            <IconWarningOutline16 />
+          )}
           <span>
             {notice.text}
             {notice.action === 'apiKey' ? (
@@ -124,7 +125,7 @@ export const AssistantMessage = memo(function AssistantMessage({
           </span>
         </div>
       ) : null}
-      {!streaming && !refused && view.searchResults.length > 0 ? (
+      {!streaming && view.searchResults.length > 0 ? (
         <div
           className={clsx(styles.summary, panelEntry === summaryEntry && styles.summaryActive)}
           onClick={() => toggleSearchPanel(summaryEntry, view.searchResults)}
@@ -143,14 +144,14 @@ export const AssistantMessage = memo(function AssistantMessage({
           <BranchSwitcher versions={versions} disabled={busy} onSelect={onSelectVersion} />
           <div className={clsx(styles.actions, isLast && styles.alwaysShow)}>
             {copyText ? <CopyButton text={copyText} /> : null}
-            {responseText && !refused ? (
+            {responseText ? (
               <ReadAloudButton messageId={message.id} text={responseText} />
             ) : null}
             <IconButton
               icon={<IconRefreshOutline16 />}
               tooltip={t('regenerate')}
               tooltipPlacement="bottom"
-              disabled={busy || refused}
+              disabled={busy}
               onClick={() => {
                 stopReadAloud()
                 regenerateReply(sessionId, message.id)

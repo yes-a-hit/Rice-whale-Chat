@@ -206,12 +206,9 @@ export const readMessageEvent = (value: unknown): MessageStreamEvent | null => {
       }
       break
     case 'message_delta':
-      if (
-        !isRecord(value.delta) ||
-        !['end_turn', 'max_tokens', 'tool_use', 'refusal'].includes(
-          value.delta.stop_reason as string
-        )
-      ) {
+      // 原版只认 end_turn/max_tokens/tool_use/refusal 四种 stop_reason，
+      // 遇到新值会把整条 message_delta 丢掉，连 usage 一起丢；这里照收。
+      if (!isRecord(value.delta)) {
         return null
       }
       return {

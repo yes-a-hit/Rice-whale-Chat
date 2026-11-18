@@ -245,3 +245,20 @@
     line-height: 22px;
   }
 }
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.brandLogo {
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  flex-shrink: 0;
+  object-fit: cover;
+  user-select: none;
+  -webkit-user-drag: none;
+}

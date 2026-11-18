@@ -523,3 +523,25 @@ export const IconToastError16 = () => (
     />
   </svg>
 )
+
+export const IconImageOutline16 = () => (
+  <svg width={16} height={16} viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="2" y="2.75" width="12" height="10.5" rx="1.75" stroke="currentColor" strokeWidth="1.3" />
+    <circle cx="5.9" cy="6" r="1.05" fill="currentColor" />
+    <path
+      d="M3.2 12.2l3.1-3.4 2.3 2.1 1.9-1.9 2.3 3.2"
+      stroke="currentColor"
+      strokeWidth="1.3"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+)
+
+export const IconChartOutline16 = () => (
+  <svg width={16} height={16} viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x={2.2} y={9.2} width={2.8} height={4.6} rx={0.9} stroke="currentColor" strokeWidth={1.3} />
+    <rect x={6.6} y={6.2} width={2.8} height={7.6} rx={0.9} stroke="currentColor" strokeWidth={1.3} />
+    <rect x={11} y={2.2} width={2.8} height={11.6} rx={0.9} stroke="currentColor" strokeWidth={1.3} />
+  </svg>
+)

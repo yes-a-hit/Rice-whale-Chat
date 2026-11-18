@@ -137,3 +137,12 @@
     --search-row-site-logo-color: var(--dsw-alias-interactive-bg-hover);
   }
 }
+
+.noticeArt {
+  width: 96px;
+  height: auto;
+  flex-shrink: 0;
+  margin-bottom: 4px;
+  user-select: none;
+  -webkit-user-drag: none;
+}

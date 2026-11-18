@@ -17,3 +17,7 @@
   font: var(--dsw-font-s-strong-14);
   color: var(--dsw-alias-label-primary);
 }
+
+.settings {
+  margin-left: auto;
+}

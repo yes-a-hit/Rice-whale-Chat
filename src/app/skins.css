@@ -1,0 +1,53 @@
+/* 皮肤：覆盖主色阶。默认皮肤（deepseek）不覆盖，沿用 theme.css 原值。 */
+
+html[data-skin='ocean'] {
+  --dsw-static-blue-50: #e6f7ff;
+  --dsw-static-blue-100: #bae7ff;
+  --dsw-static-blue-200: #91d5ff;
+  --dsw-static-blue-300: #69c0ff;
+  --dsw-static-blue-400: #40a9ff;
+  --dsw-static-blue-450: #1890ff;
+  --dsw-static-blue-500: #096dd9;
+  --dsw-static-blue-600: #0050b3;
+  --dsw-static-blue-800: #003a8c;
+  --dsw-static-blue-900: #002766;
+}
+
+html[data-skin='sakura'] {
+  --dsw-static-blue-50: #fff0f6;
+  --dsw-static-blue-100: #ffd6e7;
+  --dsw-static-blue-200: #ffc4dc;
+  --dsw-static-blue-300: #ffadd2;
+  --dsw-static-blue-400: #ff85c0;
+  --dsw-static-blue-450: #f759ab;
+  --dsw-static-blue-500: #eb2f96;
+  --dsw-static-blue-600: #c41d7f;
+  --dsw-static-blue-800: #9e1068;
+  --dsw-static-blue-900: #780650;
+}
+
+html[data-skin='forest'] {
+  --dsw-static-blue-50: #f6ffed;
+  --dsw-static-blue-100: #d9f7be;
+  --dsw-static-blue-200: #c6f0a3;
+  --dsw-static-blue-300: #b7eb8f;
+  --dsw-static-blue-400: #95de64;
+  --dsw-static-blue-450: #73d13d;
+  --dsw-static-blue-500: #52c41a;
+  --dsw-static-blue-600: #389e0d;
+  --dsw-static-blue-800: #237804;
+  --dsw-static-blue-900: #135200;
+}
+
+html[data-skin='mono'] {
+  --dsw-static-blue-50: #f5f5f5;
+  --dsw-static-blue-100: #e5e5e5;
+  --dsw-static-blue-200: #d4d4d4;
+  --dsw-static-blue-300: #b5b5b5;
+  --dsw-static-blue-400: #a3a3a3;
+  --dsw-static-blue-450: #8a8a8a;
+  --dsw-static-blue-500: #525252;
+  --dsw-static-blue-600: #404040;
+  --dsw-static-blue-800: #262626;
+  --dsw-static-blue-900: #171717;
+}
