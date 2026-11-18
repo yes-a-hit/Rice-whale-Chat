@@ -3,103 +3,110 @@
  *
  * 约定：
  *   1. 只覆盖 --dsw-static-blue-* 主色阶，不改语义色、不改布局；
- *   2. 装饰通过 --ods-decor 变量交给 .frame 的 background-image，不额外插 DOM；
- *   3. 第一层是白色遮罩，把底图压到「隐约可见」，保证文字对比度；
+ *   2. 装饰通过 --ods-decor 交给 .frame 的 background-image，不额外插 DOM；
+ *   3. 底图上盖一层遮罩（--ods-veil-*），浅色模式用白、深色模式用深色，
+ *      这样同一张图在两种模式下都不会压住文字；
  *   4. 新增主题 = 一个 html[data-theme='<id>'] 块 + 一张 decor-<id>.webp。
  */
 
-/* ---------- 国风：青蓝水墨 ---------- */
+/* 遮罩色：浅色模式白、深色模式近黑（夜间属性挂在 body 上） */
+:root {
+  --ods-veil-1: rgba(255, 255, 255, 0.78);
+  --ods-veil-2: rgba(255, 255, 255, 0.9);
+}
+
+body[data-ds-dark-theme='dark'] {
+  --ods-veil-1: rgba(12, 14, 20, 0.82);
+  --ods-veil-2: rgba(12, 14, 20, 0.92);
+}
+
+/* ---------- 国风：青绿 + 水墨 ---------- */
 html[data-theme='ink'] {
-  --dsw-static-blue-50: #eef6f7;
-  --dsw-static-blue-100: #d5e9ec;
-  --dsw-static-blue-200: #b4d8de;
-  --dsw-static-blue-300: #8cc2cb;
-  --dsw-static-blue-400: #63a9b5;
-  --dsw-static-blue-450: #4a909d;
-  --dsw-static-blue-500: #357885;
-  --dsw-static-blue-600: #25606c;
-  --dsw-static-blue-800: #1a4550;
-  --dsw-static-blue-900: #12333c;
-  --ods-decor: linear-gradient(rgba(255, 255, 255, 0.84), rgba(255, 255, 255, 0.9)),
-    url('./assets/decor-ink.webp');
+  --dsw-static-blue-50: #edf7f6;
+  --dsw-static-blue-100: #d3ecea;
+  --dsw-static-blue-200: #aadbd7;
+  --dsw-static-blue-300: #78c2bd;
+  --dsw-static-blue-400: #4ea7a3;
+  --dsw-static-blue-450: #38918e;
+  --dsw-static-blue-500: #2f7d84;
+  --dsw-static-blue-600: #22646b;
+  --dsw-static-blue-800: #16474d;
+  --dsw-static-blue-900: #0e3438;
+  --ods-image: url('./assets/decor-ink.webp');
 }
 
-/* ---------- 经典女仆：深蓝白 ---------- */
+/* ---------- 经典女仆：深藏蓝 ---------- */
 html[data-theme='maid'] {
-  --dsw-static-blue-50: #eef2fa;
-  --dsw-static-blue-100: #d8e1f2;
-  --dsw-static-blue-200: #b6c6e4;
-  --dsw-static-blue-300: #8ea6d3;
-  --dsw-static-blue-400: #6a86c2;
-  --dsw-static-blue-450: #526ea8;
-  --dsw-static-blue-500: #3f598d;
-  --dsw-static-blue-600: #314571;
-  --dsw-static-blue-800: #223050;
-  --dsw-static-blue-900: #161f35;
-  --ods-decor: linear-gradient(rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.94)),
-    url('./assets/decor-maid.webp');
+  --dsw-static-blue-50: #edeff8;
+  --dsw-static-blue-100: #d6dcf0;
+  --dsw-static-blue-200: #b3bfe0;
+  --dsw-static-blue-300: #8b9ccb;
+  --dsw-static-blue-400: #6478b0;
+  --dsw-static-blue-450: #4f629b;
+  --dsw-static-blue-500: #3b4f8a;
+  --dsw-static-blue-600: #2c3d70;
+  --dsw-static-blue-800: #1e2a4d;
+  --dsw-static-blue-900: #141c35;
+  --ods-image: url('./assets/decor-maid.webp');
 }
 
-/* ---------- 科技：青蓝荧光 ---------- */
+/* ---------- 科技：亮青荧光 ---------- */
 html[data-theme='tech'] {
-  --dsw-static-blue-50: #e8fbff;
-  --dsw-static-blue-100: #c6f5ff;
-  --dsw-static-blue-200: #9deaff;
-  --dsw-static-blue-300: #6cdcff;
-  --dsw-static-blue-400: #35c8ff;
-  --dsw-static-blue-450: #12aee8;
-  --dsw-static-blue-500: #0090c8;
-  --dsw-static-blue-600: #00729f;
-  --dsw-static-blue-800: #00506f;
-  --dsw-static-blue-900: #00394f;
-  --ods-decor: linear-gradient(rgba(255, 255, 255, 0.86), rgba(255, 255, 255, 0.92)),
-    url('./assets/decor-tech.webp');
+  --dsw-static-blue-50: #e4fbff;
+  --dsw-static-blue-100: #c0f4ff;
+  --dsw-static-blue-200: #8fe9ff;
+  --dsw-static-blue-300: #57d8fb;
+  --dsw-static-blue-400: #1fc2ee;
+  --dsw-static-blue-450: #00a6d6;
+  --dsw-static-blue-500: #0093c4;
+  --dsw-static-blue-600: #00769e;
+  --dsw-static-blue-800: #00536f;
+  --dsw-static-blue-900: #003b50;
+  --ods-image: url('./assets/decor-tech.webp');
 }
 
-/* ---------- 水墨：墨黑 ---------- */
+/* ---------- 水墨：墨灰 ---------- */
 html[data-theme='sumi'] {
-  --dsw-static-blue-50: #f7f7f6;
-  --dsw-static-blue-100: #e8e7e4;
-  --dsw-static-blue-200: #d2d1cc;
-  --dsw-static-blue-300: #b0aea7;
-  --dsw-static-blue-400: #8a8880;
-  --dsw-static-blue-450: #6e6c65;
-  --dsw-static-blue-500: #55534d;
-  --dsw-static-blue-600: #3e3c37;
-  --dsw-static-blue-800: #232220;
-  --dsw-static-blue-900: #131312;
-  --ods-decor: linear-gradient(rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0.9)),
-    url('./assets/decor-sumi.webp');
+  --dsw-static-blue-50: #f6f6f5;
+  --dsw-static-blue-100: #e6e6e3;
+  --dsw-static-blue-200: #cfceca;
+  --dsw-static-blue-300: #adaba5;
+  --dsw-static-blue-400: #8a877f;
+  --dsw-static-blue-450: #6f6c65;
+  --dsw-static-blue-500: #4a4a48;
+  --dsw-static-blue-600: #35352f;
+  --dsw-static-blue-800: #1e1e1b;
+  --dsw-static-blue-900: #111110;
+  --ods-image: url('./assets/decor-sumi.webp');
 }
 
-/* ---------- 月兔（Kimi）：米白淡紫 ---------- */
+/* ---------- 月兔（Kimi）：紫 ---------- */
 html[data-theme='moon'] {
-  --dsw-static-blue-50: #f7f4ff;
-  --dsw-static-blue-100: #ece6ff;
-  --dsw-static-blue-200: #ddd2ff;
-  --dsw-static-blue-300: #c7b6fb;
-  --dsw-static-blue-400: #b098f2;
-  --dsw-static-blue-450: #9a7fe6;
-  --dsw-static-blue-500: #8064d0;
-  --dsw-static-blue-600: #654cad;
-  --dsw-static-blue-800: #453178;
-  --dsw-static-blue-900: #2e2150;
-  --ods-decor: linear-gradient(rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.92)),
-    url('./assets/decor-moon.webp');
+  --dsw-static-blue-50: #f6f3ff;
+  --dsw-static-blue-100: #e9e2ff;
+  --dsw-static-blue-200: #d8ccff;
+  --dsw-static-blue-300: #bda9f7;
+  --dsw-static-blue-400: #a288ea;
+  --dsw-static-blue-450: #9478de;
+  --dsw-static-blue-500: #8a6fd6;
+  --dsw-static-blue-600: #6c53b4;
+  --dsw-static-blue-800: #4a387c;
+  --dsw-static-blue-900: #302453;
+  --ods-image: url('./assets/decor-moon.webp');
 }
 
-/* ---------- 奶牛（GLM）：黑白斑 ---------- */
+/* ---------- 奶牛（GLM）：蓝灰 ---------- */
 html[data-theme='gyu'] {
-  --dsw-static-blue-50: #f2f7fb;
-  --dsw-static-blue-100: #dcebf6;
-  --dsw-static-blue-200: #bfd8ea;
-  --dsw-static-blue-300: #96bcd8;
-  --dsw-static-blue-400: #6b9cc0;
-  --dsw-static-blue-450: #4e82a8;
-  --dsw-static-blue-500: #3a6a8e;
-  --dsw-static-blue-600: #2b5372;
-  --dsw-static-blue-800: #1c3a51;
-  --dsw-static-blue-900: #122636;
-  --ods-decor: linear-gradient(rgba(255, 255, 255, 0.93), rgba(255, 255, 255, 0.97)),
-    url('./assets/decor-gyu.webp');
+  --dsw-static-blue-50: #eff5fa;
+  --dsw-static-blue-100: #d9e7f2;
+  --dsw-static-blue-200: #b9d2e6;
+  --dsw-static-blue-300: #92b6d4;
+  --dsw-static-blue-400: #6b99bd;
+  --dsw-static-blue-450: #557fa4;
+  --dsw-static-blue-500: #4a6f8f;
+  --dsw-static-blue-600: #395872;
+  --dsw-static-blue-800: #253c50;
+  --dsw-static-blue-900: #182938;
+  --ods-image: url('./assets/decor-gyu.webp');
 }
+

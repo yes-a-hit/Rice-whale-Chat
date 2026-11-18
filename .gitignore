@@ -28,3 +28,5 @@ android/app/*.keystore
 
 # 截图用的无头浏览器 profile
 notes/.edge*/
+# 出图原稿（4MB+，需要时重新跑 notes/run_mascot.py）
+notes/src-art/

@@ -11,7 +11,7 @@ export const THEMES: Theme[] = [
     descriptionKey: 'odsThemePlainDesc',
     decoration: 'none',
     assets: {
-      welcome: 'welcome.webp',
+      welcome: 'plain-mascot.webp',
       hungry: 'hungry.webp',
       logo: 'logo-128.webp',
     },
@@ -21,8 +21,9 @@ export const THEMES: Theme[] = [
     nameKey: 'odsThemeInk',
     descriptionKey: 'odsThemeInkDesc',
     decoration: 'ink',
+    // 汉服鲸鱼女仆是国风的主角
     assets: {
-      welcome: 'welcome.webp',
+      welcome: 'ink-mascot.webp',
       hungry: 'hungry.webp',
       logo: 'logo-128.webp',
     },
@@ -55,7 +56,7 @@ export const THEMES: Theme[] = [
     descriptionKey: 'odsThemeSumiDesc',
     decoration: 'sumi',
     assets: {
-      welcome: 'welcome.webp',
+      welcome: 'sumi-mascot.webp',
       hungry: 'hungry.webp',
       logo: 'logo-128.webp',
     },
@@ -83,6 +84,7 @@ export const THEMES: Theme[] = [
     decoration: 'gyu',
     // 还没有专属立绘：放 figure/out/gyu-mascot.webp 后把 welcome 加回来即可
     assets: {
+      welcome: 'gyu-mascot.webp',
       hungry: 'hungry.webp',
       logo: 'logo-128.webp',
     },

@@ -355,4 +355,5 @@ export const zh = {
   odsNpuNoWebnn: '浏览器没有 WebNN：NPU 只能从原生代码调用，Web 侧最多用 WebGPU（Adreno）',
   odsNpuNoDevice: '有 WebNN 但浏览器只开放 CPU/GPU：Android 上 npu 设备类型不可用，真 NPU 要走原生插件',
   odsNpuOk: '浏览器直连 NPU 可用',
+  odsWelcomeBubble: '欢迎回来，\n想从哪里开始',
 } as const

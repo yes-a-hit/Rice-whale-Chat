@@ -19,6 +19,7 @@ export const Welcome = () => {
       {isMobile ? <MobileHeader /> : null}
       <div className={styles.welcome}>
         <div className={styles.mascot}>
+          {hasApiKey ? <div className={styles.bubble}>{t('odsWelcomeBubble')}</div> : null}
           <img
             className={styles.mascotImage}
             src={themeAsset(theme, hasApiKey ? 'welcome' : 'hungry')}

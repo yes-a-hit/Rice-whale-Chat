@@ -33,45 +33,44 @@
 - ASR 是否也本地化（faster-whisper）→ 待定。
 - 生图后端：ComfyUI API（现有）还是自带 OpenVINO SD 管线 → 待定。
 
-## 状态（2026-11-18 19:26）
+## 状态（2026-11-18 20:45）
 
-### NPU 原生桥（路线 C）
+### 主题：立绘归属、欢迎语、夜间适配（m02581 / m02587）
 
-用户选择真上 QNN。已完成骨架，桥能通，模型接入未做。
+**「换主题没用」的真因**：三处叠加 —— ① plain 与 ink 的主色都是青蓝，色相几乎一样；
+② 装饰图的白色遮罩 0.84 把纹理压到看不见；③ 立绘七套里五套共用同一张。
+所以换了主题视觉上确实没变化。
 
-- `android/app/build.gradle`：
-  - `ndk { abiFilters 'arm64-v8a' }`
-  - `implementation "com.microsoft.onnxruntime:onnxruntime-android-qnn:1.20.0"`
-  - `packagingOptions.jniLibs.excludes` 裁掉 `libQnnHtpPrepare.so`（42MB）、Gpu/Cpu/Dsp、V68/V69 Skel
-- `android/app/src/main/java/com/ricewhale/chat/NpuPlugin.java`（新）：`@CapacitorPlugin(name="Npu")`，
-  `available()` 返回 ort 是否在包内、QNN HTP 库能否 `System.loadLibrary`、ABI、`Build.SOC_MODEL`、SDK；
-  `providers()` 反射调 `OrtEnvironment.getAvailableProviders()`。
-- `MainActivity.java` 在 `super.onCreate` 前 `registerPlugin(NpuPlugin.class)`。
-- `src/services/npu.ts`（新）：`readNpuStatus()` / `readNpuProviders()`，浏览器环境返回 `unavailable` 不抛错。
-- `LabSettings.tsx` 加 `NpuBridgeCell`（实验页第一格），点检测显示 `ORT ✓ · QNN ✓ · SoC · ABI` 与 EP 列表。
+修法：
 
-**包体积**：未裁剪时 115MB，裁完 47.6MB。剩下的：libonnxruntime 16MB + V75Skel 12MB + V73Skel 7MB + QnnHtp 1MB。
-V73/V75 都留，因为 7s Gen 4 的 HTP 版本没确认；实测后可按 SoC 再删一个。
-
-**未做**：模型转换（ONNX + QDQ int8）、中文 G2P、`loadModel/run` 接口、真机调优。
-文档：`docs/npu.md`。
-
-### 检测文案修正
-
-`src/services/device.ts` 加 `nativeBridge` 字段与 `explainCompute()`；`LabSettings` 的算力检测
-现在会说明「浏览器没有 WebNN / 有 WebNN 但只开放 CPU-GPU」，不再是干巴巴的 ✗。
+- **配色拉开**：plain 保持官方紫蓝（不设变量），ink 青绿 `#2f7d84`，maid 深藏蓝 `#3b4f8a`，
+  tech 亮青 `#0093c4`，sumi 墨灰 `#4a4a48`，moon 紫 `#8a6fd6`，gyu 蓝灰 `#4a6f8f`。
+- **遮罩下调**到 0.78–0.90，纹理可见。
+- **每主题专属立绘**：用 moss 出 5 张白底立绘（`notes/run_mascot.py`，832×1216，10 步），
+  再走 `notes/make_theme_mascots.py` 抠白 → `figure/out/<id>-mascot.webp`（57–93 KB）。
+  - ink 汉服鲸鱼女仆 / plain 现代白卫衣 / sumi 黑色和服 / moon 月兔 / gyu 奶牛娘
+  - 旧的 `welcome.webp`（汉服 + 烧在图里的气泡）退役删除，`hungry.webp` 保留共用
+- **欢迎语改 DOM 气泡**：`Welcome.tsx` 里 `<div className={styles.bubble}>{t('odsWelcomeBubble')}</div>`，
+  CSS 定位在图左上（`top: 10%`，`max-width: 44%`），带指向角色的小三角。
+  i18n key 默认「欢迎回来，\n想从哪里开始」，换语言/措辞不用重出图。
+- **夜间适配**：原来遮罩是写死的白色，深色模式下整屏发白。改成
+  - `:root { --ods-veil-1/2: 白 }`、`body[data-ds-dark-theme='dark'] { --ods-veil-1/2: 近黑 }`
+  - 主题只声明 `--ods-image: url(...)`，遮罩由 `.frame` 拼：`linear-gradient(var(--ods-veil-1), var(--ods-veil-2)), var(--ods-image, none)`
+  - 关键教训：CSS 变量在**声明它的元素**上求值。`--ods-decor` 若写在 `html` 上，
+    `var(--ods-veil)` 就按 html 的值算，body 上的夜间覆盖不参与。拆成两层后各自在自己的层求值才对。
 
 ### 验证
 
-`pnpm type` / `pnpm build` / `assembleRelease` 通过。APK 47.6MB。
-`zipfile` 确认只打包 8 个 .so。截图 `notes/npu-cell2.png`。
+`pnpm type` / `pnpm build` / `assembleRelease` 通过。APK 47.92MB。
+浅色截图：`notes/t-ink.png`、`t-plain.png`、`t-moon.png`、`t-gyu.png`、`t-sumi.png`；
+夜间截图：`notes/v-ink-dark.png`、`td-gyu.png`、`td-moon.png`、`td-sumi.png`。
+`dist/media` 合计 630 KB（10 个 webp）。
 
 ### 仍未完成
 
-- NPU 上真跑模型（模型转换 + G2P）
+- NPU 上真跑模型（模型转换 + 中文 G2P）
 - 上下文压缩
-- 月兔/奶牛专属立绘
-- 真机实测
+- 真机实测（NPU 检测、主题切换、夜间模式）
 
 ## 构建
 

@@ -5,7 +5,8 @@
   overflow: hidden;
   background-color: var(--dsw-alias-bg-base);
   /* 主题装饰：由 themes.css 里的 --ods-decor 提供，缺省无 */
-  background-image: var(--ods-decor, none);
+  /* 遮罩层用 body 上的 --ods-veil-*（夜间会换成深色），下面才是主题底图 */
+  background-image: linear-gradient(var(--ods-veil-1), var(--ods-veil-2)), var(--ods-image, none);
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;

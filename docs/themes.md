@@ -67,18 +67,28 @@ html[data-theme='mytime'] {
 
 ### 第二步：背景装饰（可选）
 
-在同一个选择器里加一行 `--ods-decor`，它的值会被拼到 `.frame` 的 `background-image` 上：
+在同一个选择器里加一行 `--ods-image`，`App.module.css` 的 `.frame` 会把它拼成
 
 ```css
-  --ods-decor: radial-gradient(120% 60% at 12% -10%, rgba(75, 90, 196, 0.16), transparent 60%);
+background-image: linear-gradient(var(--ods-veil-1), var(--ods-veil-2)), var(--ods-image, none);
 ```
 
-可以叠多层渐变（见 `tech` 主题的网格写法）。装饰只是背景，**不占 DOM、不接事件、不会挡点击**。
+第一层是遮罩：`--ods-veil-1/2` 定义在 `:root`（白）与 `body[data-ds-dark-theme='dark']`（近黑）两处，
+所以**同一张图在深色模式下自动换成深色遮罩**，不用为主题单独写夜间样式。
+
+图像放在 `src/app/themes/assets/decor-<id>.webp`，CSS 里用相对路径 `url('./assets/...')`
+（写 `/media/...` 会被打包器当模块解析并报错）。装饰只是背景，**不占 DOM、不接事件、不挡点击**。
 
 ### 第三步：立绘（可选）
 
 把图放进 `figure/out/`，命名 `<主题id>-mascot.webp`，尺寸建议宽 520–760px、透明底、WEBP 质量 82–86。
 没放就回落默认立绘，不会报错。
+
+### 第三步补充：立绘
+
+每套主题一张 `<id>-mascot.webp`（透明底，宽 620 左右），注册在 `assets.welcome`。
+角色本身不带文字——欢迎语由 DOM 气泡渲染（`odsWelcomeBubble`，默认「欢迎回来，想从哪里开始」），
+这样换语言、换措辞都不用重出图。
 
 ### 第四步：注册
 

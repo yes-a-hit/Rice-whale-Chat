@@ -364,4 +364,5 @@ export const en = {
   odsNpuNoWebnn: 'No WebNN in this WebView: NPU needs native code, Web can only use WebGPU',
   odsNpuNoDevice: 'WebNN exists but only CPU/GPU: true NPU needs a native plugin',
   odsNpuOk: 'Browser-level NPU available',
+  odsWelcomeBubble: 'Welcome back.\nWhere should we start?',
 } satisfies Record<keyof typeof zh, string>
