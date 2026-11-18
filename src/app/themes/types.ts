@@ -38,7 +38,21 @@ export type ThemeMatchRule = {
   hosts?: string[]
 }
 
+/**
+ * 主色阶：只覆盖 `--dsw-static-blue-50..900`。
+ * 用 TS 而不是纯 CSS 存放，是因为套用时要写成行内变量——
+ * 行内样式优先级最高，不会被主题选择器匹配不到的情况坑掉。
+ */
+export type ThemePalette = Record<
+  '50' | '100' | '200' | '300' | '400' | '450' | '500' | '600' | '800' | '900',
+  string
+>
+
 export type Theme = {
+  /** 主色阶；省略表示沿用官方配色（plain） */
+  palette?: ThemePalette
+  /** 装饰底图文件名，位于 /media/；省略表示无装饰 */
+  image?: string
   id: ThemeId
   /** 设置界面上显示的名字 */
   nameKey: TranslationKey

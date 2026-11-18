@@ -33,46 +33,48 @@
 - ASR 是否也本地化（faster-whisper）→ 待定。
 - 生图后端：ComfyUI API（现有）还是自带 OpenVINO SD 管线 → 待定。
 
-## 状态（2026-11-18 20:45）
+## 状态（2026-11-18 21:05）
 
-### 主题：立绘归属、欢迎语、夜间适配（m02581 / m02587）
+### 五条反馈：1-3 已修，4-5 出计划
 
-**「换主题没用」的真因**：三处叠加 —— ① plain 与 ink 的主色都是青蓝，色相几乎一样；
-② 装饰图的白色遮罩 0.84 把纹理压到看不见；③ 立绘七套里五套共用同一张。
-所以换了主题视觉上确实没变化。
+**1. 版本号没更新** → 1.0.0-alpha.1 bump 到 1.1.0-alpha.1，versionCode 1010001，
+apt2 dump badging 已确认。
 
-修法：
+**2. 主题一片白** → 根治：配色从 CSS 挪进 TS（	hemes/registry.ts 的 palette 与 image），
+套用时 skins.ts 的 pplyAppearance() 用 
+oot.style.setProperty **写成行内变量**。
+行内样式优先级最高，不再依赖 html[data-theme] 选择器能否匹配。
+	hemes.css 只剩遮罩色（--ods-veil-1/2）与说明。
+截图验证：
+otes/iv-ink.png、iv-tech.png、iv-sumi.png。
 
-- **配色拉开**：plain 保持官方紫蓝（不设变量），ink 青绿 `#2f7d84`，maid 深藏蓝 `#3b4f8a`，
-  tech 亮青 `#0093c4`，sumi 墨灰 `#4a4a48`，moon 紫 `#8a6fd6`，gyu 蓝灰 `#4a6f8f`。
-- **遮罩下调**到 0.78–0.90，纹理可见。
-- **每主题专属立绘**：用 moss 出 5 张白底立绘（`notes/run_mascot.py`，832×1216，10 步），
-  再走 `notes/make_theme_mascots.py` 抠白 → `figure/out/<id>-mascot.webp`（57–93 KB）。
-  - ink 汉服鲸鱼女仆 / plain 现代白卫衣 / sumi 黑色和服 / moon 月兔 / gyu 奶牛娘
-  - 旧的 `welcome.webp`（汉服 + 烧在图里的气泡）退役删除，`hungry.webp` 保留共用
-- **欢迎语改 DOM 气泡**：`Welcome.tsx` 里 `<div className={styles.bubble}>{t('odsWelcomeBubble')}</div>`，
-  CSS 定位在图左上（`top: 10%`，`max-width: 44%`），带指向角色的小三角。
-  i18n key 默认「欢迎回来，\n想从哪里开始」，换语言/措辞不用重出图。
-- **夜间适配**：原来遮罩是写死的白色，深色模式下整屏发白。改成
-  - `:root { --ods-veil-1/2: 白 }`、`body[data-ds-dark-theme='dark'] { --ods-veil-1/2: 近黑 }`
-  - 主题只声明 `--ods-image: url(...)`，遮罩由 `.frame` 拼：`linear-gradient(var(--ods-veil-1), var(--ods-veil-2)), var(--ods-image, none)`
-  - 关键教训：CSS 变量在**声明它的元素**上求值。`--ods-decor` 若写在 `html` 上，
-    `var(--ods-veil)` 就按 html 的值算，body 上的夜间覆盖不参与。拆成两层后各自在自己的层求值才对。
+**3. NPU 检测冲突** → 两格本来就是两层东西：上面「NPU 原生桥」是 Capacitor 原生插件（ORT/QNN），
+下面「浏览器算力（Web）」是 Web API。改文案把这件事说透：
+odsNpuNoWebnn = 「浏览器这层没有 WebNN。真 NPU 只能走上面那格『NPU 原生桥』，Web 侧最多用 WebGPU」，
+odsComputeDevice 改名「浏览器算力（Web）」，hint 里直接指向上一格。
+
+**4. 生图 BYOK / 本地模型 / LoRA** → 计划见 
+otes/PLAN-local-ai.md。
+现状：云端四个字段是散的、本地没有任何模型入口、没有 LoRA 概念。
+计划：新增生图设置分组（通道切换 + 云端五项 + 本地推荐模型 + LoRA 多选 + 导入），
+先做纯 UI 与存储（1–5 步），推理后端等 NPU/WebGPU 就绪。
+
+**5. 本地跑千问** → 计划同上。选型建议 ONNX Runtime GenAI（与现有 ORT 同栈），
+模型 Qwen2.5-1.5B-int4（约 1GB）/ 3B-int4（约 2GB）。
+不做 tool calling / 联网 / 深度思考——小模型会胡说。
 
 ### 验证
 
-`pnpm type` / `pnpm build` / `assembleRelease` 通过。APK 47.92MB。
-浅色截图：`notes/t-ink.png`、`t-plain.png`、`t-moon.png`、`t-gyu.png`、`t-sumi.png`；
-夜间截图：`notes/v-ink-dark.png`、`td-gyu.png`、`td-moon.png`、`td-sumi.png`。
-`dist/media` 合计 630 KB（10 个 webp）。
+pnpm type / pnpm build / ssembleRelease 通过。APK 47.9MB，1.1.0-alpha.1。
 
 ### 仍未完成
 
+- 生图与本地 LLM（计划已出）
 - NPU 上真跑模型（模型转换 + 中文 G2P）
 - 上下文压缩
-- 真机实测（NPU 检测、主题切换、夜间模式）
+- 真机实测
 
 ## 构建
 
-- 调试：`pnpm android:apk`
-- 正式：`pnpm android:release`
+- 调试：pnpm android:apk
+- 正式：pnpm android:release

@@ -1,7 +1,10 @@
 import { useSettings } from '../services/settings.js'
 import { matchTheme } from './themes/types.js'
-import { DEFAULT_THEME, isThemeId, THEMES } from './themes/registry.js'
+import { DEFAULT_THEME, isThemeId, THEMES, themeById } from './themes/registry.js'
 import type { ThemeId } from './themes/types.js'
+
+/** 主色阶的十个档位，顺序固定 */
+const STOPS = ['50', '100', '200', '300', '400', '450', '500', '600', '800', '900'] as const
 
 /**
  * 外观：主题 + 字号。
@@ -20,6 +23,23 @@ export const applyAppearance = () => {
     delete root.dataset.theme
   } else {
     root.dataset.theme = resolved
+  }
+
+  // 配色同时写成行内变量：行内样式优先级最高，不依赖 CSS 选择器能否匹配上，
+  // 避免「选了主题但界面没变」这类由选择器/缓存引起的问题。
+  const theme = themeById(resolved)
+  for (const stop of STOPS) {
+    const color = theme.palette?.[stop]
+    if (color) {
+      root.style.setProperty(`--dsw-static-blue-${stop}`, color)
+    } else {
+      root.style.removeProperty(`--dsw-static-blue-${stop}`)
+    }
+  }
+  if (theme.image) {
+    root.style.setProperty('--ods-image', `url('/media/${theme.image}')`)
+  } else {
+    root.style.removeProperty('--ods-image')
   }
   root.style.setProperty('--ods-zoom', String(fontScale))
   root.style.zoom = fontScale === 1 ? '' : String(fontScale)

@@ -1,6 +1,6 @@
 {
   "name": "rice-whale-chat",
-  "version": "1.0.0-alpha.1",
+  "version": "1.1.0-alpha.1",
   "description": "Open DeepSeek：基于 chat-demo 的双模式本地增强聊天前端（Lite / Plus）。",
   "license": "MIT",
   "private": true,

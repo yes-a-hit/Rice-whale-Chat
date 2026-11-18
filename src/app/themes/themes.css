@@ -1,15 +1,14 @@
 /*
- * 主题样式：配色 + 背景装饰。
+ * 主题样式：只保留结构性部分（遮罩色）。
  *
- * 约定：
- *   1. 只覆盖 --dsw-static-blue-* 主色阶，不改语义色、不改布局；
- *   2. 装饰通过 --ods-decor 交给 .frame 的 background-image，不额外插 DOM；
- *   3. 底图上盖一层遮罩（--ods-veil-*），浅色模式用白、深色模式用深色，
- *      这样同一张图在两种模式下都不会压住文字；
- *   4. 新增主题 = 一个 html[data-theme='<id>'] 块 + 一张 decor-<id>.webp。
+ * 各主题的主色阶与装饰图在 `src/app/themes/registry.ts` 里，
+ * 套用时由 `src/app/skins.ts` 写成行内变量——行内样式优先级最高，
+ * 不依赖 `html[data-theme='x']` 选择器能否匹配上。
+ *
+ * 这里只定义遮罩：浅色模式白、深色模式近黑，`.frame` 会拼成
+ * `linear-gradient(--ods-veil-1, --ods-veil-2), var(--ods-image)`。
  */
 
-/* 遮罩色：浅色模式白、深色模式近黑（夜间属性挂在 body 上） */
 :root {
   --ods-veil-1: rgba(255, 255, 255, 0.78);
   --ods-veil-2: rgba(255, 255, 255, 0.9);
@@ -19,94 +18,3 @@ body[data-ds-dark-theme='dark'] {
   --ods-veil-1: rgba(12, 14, 20, 0.82);
   --ods-veil-2: rgba(12, 14, 20, 0.92);
 }
-
-/* ---------- 国风：青绿 + 水墨 ---------- */
-html[data-theme='ink'] {
-  --dsw-static-blue-50: #edf7f6;
-  --dsw-static-blue-100: #d3ecea;
-  --dsw-static-blue-200: #aadbd7;
-  --dsw-static-blue-300: #78c2bd;
-  --dsw-static-blue-400: #4ea7a3;
-  --dsw-static-blue-450: #38918e;
-  --dsw-static-blue-500: #2f7d84;
-  --dsw-static-blue-600: #22646b;
-  --dsw-static-blue-800: #16474d;
-  --dsw-static-blue-900: #0e3438;
-  --ods-image: url('./assets/decor-ink.webp');
-}
-
-/* ---------- 经典女仆：深藏蓝 ---------- */
-html[data-theme='maid'] {
-  --dsw-static-blue-50: #edeff8;
-  --dsw-static-blue-100: #d6dcf0;
-  --dsw-static-blue-200: #b3bfe0;
-  --dsw-static-blue-300: #8b9ccb;
-  --dsw-static-blue-400: #6478b0;
-  --dsw-static-blue-450: #4f629b;
-  --dsw-static-blue-500: #3b4f8a;
-  --dsw-static-blue-600: #2c3d70;
-  --dsw-static-blue-800: #1e2a4d;
-  --dsw-static-blue-900: #141c35;
-  --ods-image: url('./assets/decor-maid.webp');
-}
-
-/* ---------- 科技：亮青荧光 ---------- */
-html[data-theme='tech'] {
-  --dsw-static-blue-50: #e4fbff;
-  --dsw-static-blue-100: #c0f4ff;
-  --dsw-static-blue-200: #8fe9ff;
-  --dsw-static-blue-300: #57d8fb;
-  --dsw-static-blue-400: #1fc2ee;
-  --dsw-static-blue-450: #00a6d6;
-  --dsw-static-blue-500: #0093c4;
-  --dsw-static-blue-600: #00769e;
-  --dsw-static-blue-800: #00536f;
-  --dsw-static-blue-900: #003b50;
-  --ods-image: url('./assets/decor-tech.webp');
-}
-
-/* ---------- 水墨：墨灰 ---------- */
-html[data-theme='sumi'] {
-  --dsw-static-blue-50: #f6f6f5;
-  --dsw-static-blue-100: #e6e6e3;
-  --dsw-static-blue-200: #cfceca;
-  --dsw-static-blue-300: #adaba5;
-  --dsw-static-blue-400: #8a877f;
-  --dsw-static-blue-450: #6f6c65;
-  --dsw-static-blue-500: #4a4a48;
-  --dsw-static-blue-600: #35352f;
-  --dsw-static-blue-800: #1e1e1b;
-  --dsw-static-blue-900: #111110;
-  --ods-image: url('./assets/decor-sumi.webp');
-}
-
-/* ---------- 月兔（Kimi）：紫 ---------- */
-html[data-theme='moon'] {
-  --dsw-static-blue-50: #f6f3ff;
-  --dsw-static-blue-100: #e9e2ff;
-  --dsw-static-blue-200: #d8ccff;
-  --dsw-static-blue-300: #bda9f7;
-  --dsw-static-blue-400: #a288ea;
-  --dsw-static-blue-450: #9478de;
-  --dsw-static-blue-500: #8a6fd6;
-  --dsw-static-blue-600: #6c53b4;
-  --dsw-static-blue-800: #4a387c;
-  --dsw-static-blue-900: #302453;
-  --ods-image: url('./assets/decor-moon.webp');
-}
-
-/* ---------- 奶牛（GLM）：蓝灰 ---------- */
-html[data-theme='gyu'] {
-  --dsw-static-blue-50: #eff5fa;
-  --dsw-static-blue-100: #d9e7f2;
-  --dsw-static-blue-200: #b9d2e6;
-  --dsw-static-blue-300: #92b6d4;
-  --dsw-static-blue-400: #6b99bd;
-  --dsw-static-blue-450: #557fa4;
-  --dsw-static-blue-500: #4a6f8f;
-  --dsw-static-blue-600: #395872;
-  --dsw-static-blue-800: #253c50;
-  --dsw-static-blue-900: #182938;
-  --ods-image: url('./assets/decor-gyu.webp');
-}
-
