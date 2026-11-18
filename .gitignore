@@ -1,11 +1,30 @@
+# 依赖
 node_modules/
+.pnpm-store/
+
+# 构建产物
 dist/
 build/
-.pnpm-store/
-.cache/
-*.log
-.DS_Store
+android/build/
+android/app/build/
+android/.gradle/
+android/capacitor-cordova-android-plugins/
+
+# 本地环境
 .env
 .env.*
 !.env.example
+local.properties
+android/local.properties
+*.log
 tmp/
+.cache/
+.DS_Store
+
+# 签名材料（丢了就没法覆盖升级，自己留一份备份）
+android/keystore.properties
+android/app/*.jks
+android/app/*.keystore
+
+# 截图用的无头浏览器 profile
+notes/.edge*/

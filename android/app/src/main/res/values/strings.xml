@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Open DeepSeek</string>
+    <string name="title_activity_main">Open DeepSeek</string>
+    <string name="package_name">com.opendeepseek.chat</string>
+    <string name="custom_url_scheme">com.opendeepseek.chat</string>
+</resources>

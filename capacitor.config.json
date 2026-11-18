@@ -1,0 +1,18 @@
+{
+  "appId": "com.opendeepseek.chat",
+  "appName": "Rice Whale Chat",
+  "webDir": "dist",
+  "android": {
+    "allowMixedContent": true,
+    "webContentsDebuggingEnabled": true
+  },
+  "server": {
+    "androidScheme": "https"
+  },
+  "plugins": {
+    "Keyboard": {
+      "resize": "body",
+      "resizeOnFullScreen": true
+    }
+  }
+}
