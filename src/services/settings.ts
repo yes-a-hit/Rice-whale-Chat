@@ -3,6 +3,39 @@ import { create } from 'zustand'
 import type { TtsVoice } from './api/speech.js'
 import { normalizeLocation, type UserLocation } from './location.js'
 
+/**
+ * 模型方案：一套「服务地址 + Key + 模型名」的组合。
+ * 支持任何 OpenAI 兼容接口（DeepSeek 官方 / OpenAI / 中转站 / 自建）。
+ */
+export type ProviderPreset = {
+  id: string
+  name: string
+  baseUrl: string
+  /** 留空表示沿用全局 API Key */
+  apiKey?: string
+  model: string
+}
+
+/** 内置方案：官方 DeepSeek + OpenAI 兼容入口 */
+export const BUILTIN_PRESETS: ProviderPreset[] = [
+  { id: 'deepseek', name: 'DeepSeek 官方', baseUrl: 'https://api.deepseek.com', model: 'deepseek-v4.1-flash' },
+  { id: 'openai', name: 'OpenAI', baseUrl: 'https://api.openai.com/v1', model: 'gpt-4o-mini' },
+  { id: 'custom', name: '自定义（OpenAI 兼容）', baseUrl: '', model: '' },
+]
+
+const readPresets = (): ProviderPreset[] => {
+  const raw = read(KEYS.presets)
+  if (!raw) {
+    return BUILTIN_PRESETS
+  }
+  try {
+    const parsed = JSON.parse(raw) as ProviderPreset[]
+    return Array.isArray(parsed) && parsed.length > 0 ? parsed : BUILTIN_PRESETS
+  } catch {
+    return BUILTIN_PRESETS
+  }
+}
+
 export type Locale = 'zh-CN' | 'en-US'
 
 /** 主题偏好；默认跟随系统 */
@@ -84,7 +117,11 @@ type Settings = {
   /** 思考内容完成后自动收起 */
   collapseThinking: boolean
   /** 当前模型（Lite 用快速/专家两档，Plus 可任选） */
-  model: ChatModel
+  model: string
+  /** 模型方案列表（服务地址 + Key + 模型名） */
+  presets: ProviderPreset[]
+  /** 当前使用的方案 id */
+  activePreset: string
   /** 生图（BYOK） */
   imageEnabled: boolean
   imageBaseUrl: string
@@ -143,6 +180,8 @@ const KEYS = {
   showBalance: 'ods:show-balance',
   collapseThinking: 'ods:collapse-thinking',
   model: 'ods:model',
+  presets: 'ods:presets',
+  activePreset: 'ods:active-preset',
 } as const
 
 /** 旧版 chat-demo 的键前缀，首次启动时迁移一次，避免升级后丢 key */
@@ -253,8 +292,7 @@ const initialNumber = (key: string): number | null => {
 }
 
 /** 模型 id 校验：只认这两个，旧值回落快速档（不引用外部模块，避免初始化顺序问题） */
-const initialModel = (): ChatModel =>
-  read(KEYS.model) === 'deepseek-v4-pro' ? 'deepseek-v4-pro' : 'deepseek-v4.1-flash'
+const initialModel = (): string => read(KEYS.model) || 'deepseek-v4.1-flash'
 
 const initialModelSource = (): ModelSource => {
   const saved = read(KEYS.modelSource)
@@ -309,6 +347,8 @@ export const useSettings = create<Settings>(() => ({
   showBalance: read(KEYS.showBalance) !== '0',
   collapseThinking: read(KEYS.collapseThinking) === 'true',
   model: initialModel(),
+  presets: readPresets(),
+  activePreset: read(KEYS.activePreset) ?? 'deepseek',
 }))
 
 export const setLocale = (locale: Locale) => {
@@ -410,6 +450,50 @@ export const setTtsSystemVoice = (ttsSystemVoice: string) => {
 export const setAdvancedTts = (advancedTts: boolean) => {
   write(KEYS.advancedTts, String(advancedTts))
   useSettings.setState({ advancedTts })
+}
+
+/** 切换模型方案：把方案里的地址/模型/Key 写进当前生效设置 */
+export const applyPreset = (id: string) => {
+  const state = useSettings.getState()
+  const preset = state.presets.find((item) => item.id === id)
+  if (!preset) {
+    return
+  }
+  const baseUrl = preset.baseUrl.trim()
+  const model = preset.model.trim()
+  write(KEYS.activePreset, id)
+  if (baseUrl) {
+    write(KEYS.apiBaseUrl, baseUrl)
+  }
+  if (model) {
+    write(KEYS.model, model)
+  }
+  if (preset.apiKey) {
+    write(KEYS.apiKey, preset.apiKey)
+  }
+  useSettings.setState({
+    activePreset: id,
+    ...(baseUrl ? { apiBaseUrl: baseUrl } : {}),
+    ...(model ? { model } : {}),
+    ...(preset.apiKey ? { apiKey: preset.apiKey } : {}),
+  })
+}
+
+const persistPresets = (presets: ProviderPreset[]) => {
+  write(KEYS.presets, JSON.stringify(presets))
+  useSettings.setState({ presets })
+}
+
+/** 新增或更新一个方案 */
+export const savePreset = (preset: ProviderPreset) => {
+  const list = useSettings.getState().presets
+  const exists = list.some((item) => item.id === preset.id)
+  persistPresets(exists ? list.map((item) => (item.id === preset.id ? preset : item)) : [...list, preset])
+}
+
+export const removePreset = (id: string) => {
+  const list = useSettings.getState().presets.filter((item) => item.id !== id)
+  persistPresets(list)
 }
 
 export const setModel = (model: ChatModel) => {

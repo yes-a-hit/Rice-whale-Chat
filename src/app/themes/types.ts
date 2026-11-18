@@ -51,6 +51,8 @@ export type ThemePalette = Record<
 export type Theme = {
   /** 主色阶；省略表示沿用官方配色（plain） */
   palette?: ThemePalette
+  /** 立绘自带气泡文字（老素材），为真时不再渲染 DOM 气泡 */
+  builtinBubble?: boolean
   /** 装饰底图文件名，位于 /media/；省略表示无装饰 */
   image?: string
   id: ThemeId

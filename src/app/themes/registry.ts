@@ -17,7 +17,7 @@ export const THEMES: Theme[] = [
     assets: {
       welcome: 'plain-mascot.webp',
       hungry: 'hungry.webp',
-      logo: 'logo-128.webp',
+      logo: 'plain-logo.webp',
     },
   },
   {
@@ -38,11 +38,12 @@ export const THEMES: Theme[] = [
       '800': '#16474d',
       '900': '#0e3438',
     },
-    // 汉服鲸鱼女仆是国风的主角
+    // 汉服鲸鱼女仆是国风的主角；这张老图自带气泡文字
+    builtinBubble: true,
     assets: {
       welcome: 'ink-mascot.webp',
       hungry: 'hungry.webp',
-      logo: 'logo-128.webp',
+      logo: 'ink-logo.webp',
     },
   },
   {
@@ -66,7 +67,7 @@ export const THEMES: Theme[] = [
     assets: {
       welcome: 'maid-mascot.webp',
       hungry: 'hungry.webp',
-      logo: 'logo-128.webp',
+      logo: 'maid-logo.webp',
     },
   },
   {
@@ -90,7 +91,7 @@ export const THEMES: Theme[] = [
     assets: {
       welcome: 'tech-mascot.webp',
       hungry: 'hungry.webp',
-      logo: 'logo-128.webp',
+      logo: 'tech-logo.webp',
     },
   },
   {
@@ -114,7 +115,7 @@ export const THEMES: Theme[] = [
     assets: {
       welcome: 'sumi-mascot.webp',
       hungry: 'hungry.webp',
-      logo: 'logo-128.webp',
+      logo: 'sumi-logo.webp',
     },
   },
   {
@@ -138,7 +139,7 @@ export const THEMES: Theme[] = [
     assets: {
       welcome: 'moon-mascot.webp',
       hungry: 'hungry.webp',
-      logo: 'logo-128.webp',
+      logo: 'moon-logo.webp',
     },
     match: {
       models: ['kimi', 'moonshot'],
@@ -166,7 +167,7 @@ export const THEMES: Theme[] = [
     assets: {
       welcome: 'gyu-mascot.webp',
       hungry: 'hungry.webp',
-      logo: 'logo-128.webp',
+      logo: 'gyu-logo.webp',
     },
     match: {
       models: ['glm', 'chatglm', 'zhipu'],

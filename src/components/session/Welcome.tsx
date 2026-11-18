@@ -2,7 +2,7 @@ import { useIsMobile } from '../../app/viewport.js'
 import { useTranslate } from '../../i18n/index.js'
 import { useSettings } from '../../services/settings.js'
 import { selectTheme } from '../../app/skins.js'
-import { themeAsset } from '../../app/themes/registry.js'
+import { themeAsset, themeById } from '../../app/themes/registry.js'
 import { openSettings } from '../settings/settingsDialogState.js'
 import { ChatInput } from '../chatInput/ChatInput.js'
 import { MobileHeader } from './MobileHeader.js'
@@ -19,7 +19,9 @@ export const Welcome = () => {
       {isMobile ? <MobileHeader /> : null}
       <div className={styles.welcome}>
         <div className={styles.mascot}>
-          {hasApiKey ? <div className={styles.bubble}>{t('odsWelcomeBubble')}</div> : null}
+          {hasApiKey && !themeById(theme).builtinBubble ? (
+            <div className={styles.bubble}>{t('odsWelcomeBubble')}</div>
+          ) : null}
           <img
             className={styles.mascotImage}
             src={themeAsset(theme, hasApiKey ? 'welcome' : 'hungry')}

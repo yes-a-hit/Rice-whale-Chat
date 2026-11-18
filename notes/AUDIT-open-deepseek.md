@@ -33,30 +33,41 @@
 - ASR 是否也本地化（faster-whisper）→ 待定。
 - 生图后端：ComfyUI API（现有）还是自带 OpenVINO SD 管线 → 待定。
 
-## 状态（2026-11-18 21:02）
+## 状态（2026-11-18 21:35）
 
-### 图片放大盖住界面（m03032）
+### 主题：图标跟着换 + 素材归位（m03264 / m03279）
 
-**原因**：MessageFile.tsx 点图片走 window.open(url, '_blank')。在 Capacitor WebView 里这会开一个
-新页面，图片按原始像素铺满、没有任何尺寸约束，且把整个应用顶掉。
+- **每套主题自己的 logo**：
+otes/make_theme_logos.py 从各 <id>-mascot.webp 裁头部 → igure/out/<id>-logo.webp；
+  
+egistry.ts 每套主题 ssets.logo 指向自己的；Sider.tsx / Onboarding.tsx 从硬编码 /media/logo-128.webp
+  改成 	hemeAsset(useSettings(selectTheme), 'logo')。换主题时侧栏和引导页的小头像一起换。
+- **国风用回最初的 meme 图**：
+otes/fix_ink_and_tech_logo.py 从 igure/welcome.jpg（汉服鲸鱼女仆，气泡在图里）
+  裁切去白底 → ink-mascot.webp；Theme 加 uiltinBubble?: boolean，ink 设 true，
+  Welcome.tsx 在这种情况下不再渲染 DOM 气泡，避免双气泡。
+- **女仆立绘抠图修复**：
+otes/fix_maid_mascot.py 用 (top >= 238) & ((top - low) <= 12) + 四边连通，
+  只抠外部背景（36.9%），白围裙/白领子/白花边全部保住。
+- **装饰底图不显示**：decor-*.webp 原本只放在 src/app/themes/assets/，而 skins.ts 拼的是 /media/ → 404。
+  已复制到 igure/out/ 交给 CopyRspackPlugin，dist/media 现在六个 decor 齐全。奶牛斑块额外调淡（向白混 55%）。
 
-**修法**：改成应用内查看器。
-- 新 src/components/files/ImageViewer.tsx + .module.css：ixed inset:0 黑色半透明层，
-  图片 max-width/max-height: 100% + object-fit: contain，点任意处或右上角关闭，Esc 也关。
-- 新 src/components/files/imageViewerState.ts：zustand 单例，openImageViewer(src, alt) / closeImageViewer()。
-- 新 src/components/files/ImageViewerHost.tsx：挂在 App.tsx 根部，有 src 才渲染。
-- MessageFile.tsx 的图片正常态由 <a target=_blank> 改成 <button onClick={openImageViewer}>，
-  非图片文件的 onOpen 也接到同一个查看器。
+### 模型方案（m03359）
 
-### 三条小活（同日早些时候）
-
-自动折叠思考（collapseThinking）、计费实时估算 + 官方价格（0.5/2/8）、模型选择（v4.1-flash / v4-pro）。
-TDZ 踩坑：initialModel() 必须定义在 useSettings = create() 之前，否则 production 压缩构建崩在
-Cannot access \'ep\' before initialization。
+settings.ts 新增 ProviderPreset { id, name, baseUrl, apiKey?, model }、presets、ctivePreset，
+内置三套：DeepSeek 官方 / OpenAI / 自定义（OpenAI 兼容）。pplyPreset(id) 把方案的地址、模型、Key 写进当前生效设置；
+savePreset / 
+emovePreset 管列表。ChatModel 放宽为 string，第三方模型名不受限。
+UI 在「扩展」页「模型方案」：点一行即切换，编辑可改名称/地址/模型/专用 Key。
+Lite 的快速 / 专家仍绑 deepseek-v4.1-flash / deepseek-v4-pro。
 
 ### 验证
 
-pnpm type / pnpm build / ssembleRelease 通过。APK 47.82MB，1.1.0-alpha.1。
+pnpm type / pnpm build / ssembleRelease 通过。APK 47.95MB。截图：
+otes/tz-maid.png（女仆修好）、
+
+otes/tl-ink.png（国风老图 + 单气泡）、
+otes/preset-ext.png（模型方案）。
 
 ## 构建
 

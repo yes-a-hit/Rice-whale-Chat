@@ -90,6 +90,8 @@ export type AssistantMessage = MessageBranch & {
   blocks: ReplyBlock[]
   stopReason?: StopReason
   stopDetails?: StopDetails
+  /** 用户手动改过正文（只改本地，不重新请求模型） */
+  edited?: boolean
   /** 最近一次请求的用量，续写后更新 */
   usage?: MessageUsage
   /** 本轮从发请求到收尾的耗时（毫秒），用于算 token 速率 */
@@ -114,6 +116,8 @@ export type Session = {
   title: string
   createdAt: number
   updatedAt: number
+  /** 已归档：默认不在侧栏主列表显示 */
+  archived?: boolean
   /** 包含所有分支的消息，按创建顺序存储。 */
   messages: Message[]
   /** undefined 表示线性消息列表；null 表示空会话。 */
@@ -121,7 +125,10 @@ export type Session = {
 }
 
 /** 会话列表元数据；消息只在打开会话时加载。 */
-export type SessionSummary = Pick<Session, 'id' | 'title' | 'createdAt' | 'updatedAt'>
+export type SessionSummary = Pick<
+  Session,
+  'id' | 'title' | 'createdAt' | 'updatedAt' | 'archived'
+>
 
 /** 显式提取字段，避免将完整会话的消息带进列表。 */
 export const toSessionSummary = (session: SessionSummary): SessionSummary => ({
@@ -129,4 +136,5 @@ export const toSessionSummary = (session: SessionSummary): SessionSummary => ({
   title: session.title,
   createdAt: session.createdAt,
   updatedAt: session.updatedAt,
+  ...(session.archived ? { archived: true } : {}),
 })

@@ -1,8 +1,13 @@
 import clsx from 'clsx'
 import { memo, useState } from 'react'
 import { useTranslate } from '../../i18n/index.js'
-import { IconEditOutline16, IconEllipsisOutline16, IconTrashOutline16 } from '../base/icons.js'
-import { renameSession, selectSession } from '../../services/chat/store.js'
+import {
+  IconEditOutline16,
+  IconEllipsisOutline16,
+  IconFolderOutline16,
+  IconTrashOutline16,
+} from '../base/icons.js'
+import { archiveSession, renameSession, selectSession } from '../../services/chat/store.js'
 import type { SessionSummary } from '../../services/chat/types.js'
 import { IconButton } from '../base/IconButton.js'
 import { Menu } from '../base/Menu.js'
@@ -64,6 +69,12 @@ export const SessionItem = memo(function SessionItem({
               label: t('sessionItemMenuRenameOption'),
               icon: <IconEditOutline16 />,
               onSelect: () => setEditing(true),
+            },
+            {
+              key: 'archive',
+              label: session.archived ? t('odsUnarchive') : t('odsArchive'),
+              icon: <IconFolderOutline16 />,
+              onSelect: () => archiveSession(session.id, !session.archived),
             },
             {
               key: 'delete',

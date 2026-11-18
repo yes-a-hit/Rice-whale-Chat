@@ -1,7 +1,12 @@
 import clsx from 'clsx'
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslate } from '../../i18n/index.js'
-import { IconPanelLeftOutline16, IconSettingsOutline16, NewChatIcon } from '../base/icons.js'
+import {
+  IconFolderOutline16,
+  IconPanelLeftOutline16,
+  IconSettingsOutline16,
+  NewChatIcon,
+} from '../base/icons.js'
 import { setSiderCollapsed } from '../../services/settings.js'
 import { groupSessions } from '../../services/chat/sessionGroups.js'
 import { newChat, removeSession, useChatStore } from '../../services/chat/store.js'
@@ -13,15 +18,25 @@ import { showToast } from '../base/toastState.js'
 import { openSettings } from '../settings/settingsDialogState.js'
 import { closeMobileSider, useMobileSider } from './mobileSiderState.js'
 import { SessionItem } from './SessionItem.js'
+import { selectTheme } from '../../app/skins.js'
+import { themeAsset } from '../../app/themes/registry.js'
+import { useSettings } from '../../services/settings.js'
 import styles from './Sider.module.css'
 
 /** 展开的侧边栏：名称与收起按钮、开启新对话、按时间分组的会话列表、底部设置；移动端放在抽屉里，收起按钮关闭抽屉 */
 export const Sider = ({ mobile = false }: { mobile?: boolean }) => {
   const t = useTranslate()
+  const logo = themeAsset(useSettings(selectTheme), 'logo')
   const sessions = useChatStore((state) => state.sessions)
   const activeId = useChatStore((state) => state.activeId)
   const [now, setNow] = useState(Date.now)
-  const groups = useMemo(() => groupSessions(sessions, now, t), [sessions, now, t])
+  const [showArchived, setShowArchived] = useState(false)
+  // 默认只看未归档；打开「已归档」时反过来只看归档的
+  const visibleSessions = useMemo(
+    () => sessions.filter((session) => Boolean(session.archived) === showArchived),
+    [sessions, showArchived]
+  )
+  const groups = useMemo(() => groupSessions(visibleSessions, now, t), [visibleSessions, now, t])
   const [deleting, setDeleting] = useState<SessionSummary | null>(null)
   const [deletePending, setDeletePending] = useState(false)
 
@@ -53,7 +68,7 @@ export const Sider = ({ mobile = false }: { mobile?: boolean }) => {
     <div className={clsx(styles.sider, mobile && styles.mobile)}>
       <div className={styles.top}>
         <div className={styles.brand}>
-          <img className={styles.brandLogo} src="/media/logo-128.webp" alt="" draggable={false} />
+          <img className={styles.brandLogo} src={logo} alt="" draggable={false} />
           <div className={styles.appName}>{t('appName')}</div>
         </div>
         <IconButton
@@ -95,6 +110,18 @@ export const Sider = ({ mobile = false }: { mobile?: boolean }) => {
         </div>
       </div>
       <div className={styles.bottom}>
+        <button
+          type="button"
+          className={styles.settings}
+          onClick={() => setShowArchived((value) => !value)}
+        >
+          <span className={styles.settingsIcon}>
+            <IconFolderOutline16 />
+          </span>
+          <span className={styles.settingsLabel}>
+            {showArchived ? t('odsBackToChats') : t('odsArchivedChats')}
+          </span>
+        </button>
         <button type="button" className={styles.settings} onClick={() => openSettings('general')}>
           <span className={styles.settingsIcon}>
             <IconSettingsOutline16 />

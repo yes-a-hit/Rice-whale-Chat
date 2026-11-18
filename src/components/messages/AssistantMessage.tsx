@@ -1,10 +1,15 @@
 import { useTranslate } from '../../i18n/index.js'
 import clsx from 'clsx'
-import { memo } from 'react'
-import { IconRefreshOutline16, IconWarningOutline16 } from '../base/icons.js'
+import { memo, useState } from 'react'
+import {
+  IconEditOutline16,
+  IconRefreshOutline16,
+  IconTrashOutline16,
+  IconWarningOutline16,
+} from '../base/icons.js'
 import { describeReply } from '../../services/chat/describe.js'
 import { canContinueReply } from '../../services/chat/reply.js'
-import { continueReply, regenerateReply } from '../../services/chat/store.js'
+import { continueReply, deleteMessage, editReply, regenerateReply } from '../../services/chat/store.js'
 import { stopReadAloud } from '../../services/speech/readAloud.js'
 import type { AssistantMessage as AssistantMessageType } from '../../services/chat/types.js'
 import { openSettings } from '../settings/settingsDialogState.js'
@@ -55,6 +60,17 @@ export const AssistantMessage = memo(function AssistantMessage({
   const copyText = responseText || notice?.text
   const waiting = streaming && view.steps.length === 0 && !view.answer && !message.thinking
   const summaryEntry = `${message.id}-summary`
+  const [editing, setEditing] = useState(false)
+  const [draft, setDraft] = useState('')
+  const startEditing = () => {
+    setDraft(answer?.text ?? '')
+    setEditing(true)
+  }
+  const saveEditing = () => {
+    if (editReply(sessionId, message.id, draft)) {
+      setEditing(false)
+    }
+  }
   return (
     <div className={styles.message}>
       <ReplyArea
@@ -63,7 +79,25 @@ export const AssistantMessage = memo(function AssistantMessage({
         streaming={streaming}
         hasResponse={!!responseText}
       />
-      {answer ? (
+      {editing ? (
+        <div className={styles.editor}>
+          <textarea
+            className={styles.editorInput}
+            value={draft}
+            autoFocus
+            rows={Math.min(18, Math.max(4, draft.split('\n').length + 1))}
+            onChange={(event) => setDraft(event.target.value)}
+          />
+          <div className={styles.editorActions}>
+            <Button size="s" variant="outlined" onClick={() => setEditing(false)}>
+              {t('cancel')}
+            </Button>
+            <Button size="s" variant="primary" onClick={saveEditing}>
+              {t('confirm')}
+            </Button>
+          </div>
+        </div>
+      ) : answer ? (
         <Markdown
           className="ds-assistant-message-main-content"
           content={answer.markdown}
@@ -141,12 +175,29 @@ export const AssistantMessage = memo(function AssistantMessage({
       ) : null}
       {streaming ? null : (
         <div className={styles.bottom}>
-          <BranchSwitcher versions={versions} disabled={busy} onSelect={onSelectVersion} />
+          <div className={styles.bottomMeta}>
+            <BranchSwitcher versions={versions} disabled={busy} onSelect={onSelectVersion} />
+            {message.edited ? <span className={styles.editedTag}>{t('odsEdited')}</span> : null}
+          </div>
           <div className={clsx(styles.actions, isLast && styles.alwaysShow)}>
             {copyText ? <CopyButton text={copyText} /> : null}
             {responseText ? (
               <ReadAloudButton messageId={message.id} text={responseText} />
             ) : null}
+            <IconButton
+              icon={<IconEditOutline16 />}
+              tooltip={t('editMessage')}
+              tooltipPlacement="bottom"
+              disabled={busy || !answer}
+              onClick={startEditing}
+            />
+            <IconButton
+              icon={<IconTrashOutline16 />}
+              tooltip={t('delete')}
+              tooltipPlacement="bottom"
+              disabled={busy}
+              onClick={() => deleteMessage(sessionId, message.id)}
+            />
             <IconButton
               icon={<IconRefreshOutline16 />}
               tooltip={t('regenerate')}

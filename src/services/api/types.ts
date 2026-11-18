@@ -5,19 +5,20 @@
  */
 
 /**
- * 可选模型。
- * - v4.1-flash：快速档，便宜、快，日常问答
- * - v4-pro：专家档，慢但推理强，适合复杂问题
+ * 模型名。DeepSeek 官方两档：
+ * - deepseek-v4.1-flash：快速档，便宜、快，日常问答
+ * - deepseek-v4-pro：专家档，慢但推理强，适合复杂问题
+ * 接第三方 OpenAI 兼容接口时可以是任意模型名，所以类型放宽为 string。
  */
-export type ChatModel = 'deepseek-v4.1-flash' | 'deepseek-v4-pro'
+export type ChatModel = string
 
 /** 界面上给两档起的名字 */
-export const CHAT_MODELS: { id: ChatModel; labelKey: 'odsModelFlash' | 'odsModelPro' }[] = [
+export const CHAT_MODELS: { id: string; labelKey: 'odsModelFlash' | 'odsModelPro' }[] = [
   { id: 'deepseek-v4.1-flash', labelKey: 'odsModelFlash' },
   { id: 'deepseek-v4-pro', labelKey: 'odsModelPro' },
 ]
 
-export const DEFAULT_CHAT_MODEL: ChatModel = 'deepseek-v4.1-flash'
+export const DEFAULT_CHAT_MODEL = 'deepseek-v4.1-flash'
 
 // ---------- 响应：内容块 ----------
 

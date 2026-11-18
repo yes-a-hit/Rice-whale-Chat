@@ -2,6 +2,9 @@ import { useState } from 'react'
 import clsx from 'clsx'
 import { useTranslate } from '../../i18n/index.js'
 import { completeOnboarding, type UiMode } from '../../services/settings.js'
+import { selectTheme } from '../../app/skins.js'
+import { useSettings } from '../../services/settings.js'
+import { themeAsset } from '../../app/themes/registry.js'
 import styles from './Onboarding.module.css'
 
 /**
@@ -9,6 +12,7 @@ import styles from './Onboarding.module.css'
  * 给家人用的场景只点一次就进聊天，两个卡片都是整块可点。
  */
 export const Onboarding = () => {
+  const logo = themeAsset(useSettings(selectTheme), 'logo')
   const t = useTranslate()
   const [chosen, setChosen] = useState<UiMode | null>(null)
   const start = (mode: UiMode) => {
@@ -21,7 +25,7 @@ export const Onboarding = () => {
   return (
     <div className={styles.overlay} role="dialog" aria-modal="true" aria-label={t('odsOnboardTitle')}>
       <div className={styles.panel}>
-        <img className={styles.logo} src="/media/logo-128.webp" alt="" draggable={false} />
+        <img className={styles.logo} src={logo} alt="" draggable={false} />
         <h1 className={styles.title}>{t('odsOnboardTitle')}</h1>
         <p className={styles.subtitle}>{t('odsOnboardSubtitle')}</p>
         <div className={styles.cards}>

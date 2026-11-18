@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { createId } from '../../utils/id.js'
 import { ApiError, streamMessage } from '../api/client.js'
 import type { ChatModel, CreateMessageRequest } from '../api/types.js'
+import type { ReplyBlock } from './types.js'
 import { extractFileIds, getFileErrorCode, isRetryableApiError } from '../api/errors.js'
 import { cancelUpload, describeUploadError, uploadAttachment, useUploads } from '../attachments.js'
 import { buildAuxBlock } from './promptLayers.js'
@@ -483,6 +484,18 @@ export const renameSession = (id: string, title: string) => {
  * 删除会话；本地原件仅在没有其他会话引用时清理。远端文件不删：导入、编辑、重新生成都会复用同一个附件，
  * 同一服务端文件可能被多个会话引用，不维护引用计数。
  */
+/** 归档 / 取消归档一个会话 */
+export const archiveSession = (id: string, archived: boolean) => {
+  const session = getSession(id)
+  if (session) {
+    updateSession(id, (value) => ({ ...value, archived }))
+  }
+  useChatStore.setState((state) => ({
+    sessions: state.sessions.map((item) => (item.id === id ? { ...item, archived } : item)),
+  }))
+  persist(id)
+}
+
 export const removeSession = (id: string): Promise<boolean> => {
   const task = removeSessionData(id).finally(() => deletionTasks.delete(task))
   deletionTasks.add(task)
@@ -673,6 +686,61 @@ export const editMessage = (sessionId: string, messageId: string, content: strin
   }))
   persist(sessionId)
   void streamReply(sessionId, reply, { history: path.slice(0, index), question })
+  return true
+}
+
+/** 编辑助手回复：只改本地正文，不重新请求模型、不触发重新生成 */
+export const editReply = (sessionId: string, messageId: string, content: string): boolean => {
+  if (get().importingHistory || deletingSessions.has(sessionId) || getStreamController(sessionId)) {
+    return false
+  }
+  const session = getSession(sessionId)
+  if (!session) {
+    return false
+  }
+  const path = getVisibleMessages(session)
+  const message = path.find((item) => item.id === messageId)
+  const text = content.trim()
+  if (message?.role !== 'assistant' || !text) {
+    return false
+  }
+  // 保留思考/工具块，把正文合并成一个 text 块
+  const blocks: ReplyBlock[] = message.blocks.filter((block) => block.type !== 'text')
+  blocks.push({ type: 'text', text })
+  updateReply(sessionId, { ...message, blocks, edited: true })
+  updateSession(sessionId, (s) => ({ ...s, updatedAt: Date.now() }))
+  persist(sessionId)
+  return true
+}
+
+/**
+ * 删除一条消息。
+ * 删助手回复时，连带它对应的那条提问一起删，避免留下孤零零的问题。
+ */
+export const deleteMessage = (sessionId: string, messageId: string): boolean => {
+  if (get().importingHistory || deletingSessions.has(sessionId) || getStreamController(sessionId)) {
+    return false
+  }
+  const session = getSession(sessionId)
+  if (!session) {
+    return false
+  }
+  const path = getVisibleMessages(session)
+  const index = path.findIndex((item) => item.id === messageId)
+  if (index < 0) {
+    return false
+  }
+  const doomed = new Set([messageId])
+  const previous = path[index - 1]
+  if (path[index].role === 'assistant' && previous?.role === 'user') {
+    doomed.add(previous.id)
+  }
+  updateSession(sessionId, (s) => ({
+    ...s,
+    messages: s.messages.filter((item) => !doomed.has(item.id)),
+    updatedAt: Date.now(),
+  }))
+  persist(sessionId)
   return true
 }
 
