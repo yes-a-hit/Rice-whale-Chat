@@ -33,41 +33,32 @@
 - ASR 是否也本地化（faster-whisper）→ 待定。
 - 生图后端：ComfyUI API（现有）还是自带 OpenVINO SD 管线 → 待定。
 
-## 状态（2026-11-18 21:20）
+## 状态（2026-11-18 21:02）
 
-### 三条小活已落地
+### 图片放大盖住界面（m03032）
 
-1. **自动折叠思考**：设置项 collapseThinking（默认关），开启后流式期间展开、回答开始/结束自动收起；
-   ReplyArea.tsx 用 useEffect 监听 streaming。UI 在「扩展」页默认开关区。
-2. **计费实时**：DEFAULT_PRICE 改成官方口径（缓存命中 0.5 / 输入 2 / 输出 8，元每百万 token）；
-   SessionStatsBar 把 status=pending 的回复按「字符数 / 1.6」估 output token 并计入费用，
-   生成过程中数字会动。
-3. **模型选择**：ChatModel 改为 deepseek-v4.1-flash / deepseek-v4-pro；
-   settings 加 model；store.ts 的常量 MODEL 换成 currentModel() 读设置；
-   ChatInput 加 ModelPicker：Lite 是「快速 / 专家」两个胶囊，Plus 是一个下拉。
+**原因**：MessageFile.tsx 点图片走 window.open(url, '_blank')。在 Capacitor WebView 里这会开一个
+新页面，图片按原始像素铺满、没有任何尺寸约束，且把整个应用顶掉。
 
-**踩坑（重要）**：initialModel() 定义在 useSettings = create() 之后，
-production 构建（压缩后）报 Cannot access 'ep' before initialization——
-const 箭头函数在模块顶层初始化前被调用就是 TDZ。dev 模式不报是因为没压缩。
-教训：所有 initialXxx() 必须定义在 create() 之前。
+**修法**：改成应用内查看器。
+- 新 src/components/files/ImageViewer.tsx + .module.css：ixed inset:0 黑色半透明层，
+  图片 max-width/max-height: 100% + object-fit: contain，点任意处或右上角关闭，Esc 也关。
+- 新 src/components/files/imageViewerState.ts：zustand 单例，openImageViewer(src, alt) / closeImageViewer()。
+- 新 src/components/files/ImageViewerHost.tsx：挂在 App.tsx 根部，有 src 才渲染。
+- MessageFile.tsx 的图片正常态由 <a target=_blank> 改成 <button onClick={openImageViewer}>，
+  非图片文件的 onOpen 也接到同一个查看器。
 
-**踩坑（样式）**：模型选择器一开始放在 .toggles 内部，被 .collapsedToggles .toggleLabel{display:none}
-的折叠逻辑吃掉文字。挪到 toggles 外面才稳定显示。
+### 三条小活（同日早些时候）
 
-### 新增五条（m02997）已出计划
-
-
-otes/PLAN-plus.md：可编辑/删除回复（4h）、per-conversation agent 与 preset（8h，依赖角色卡）、
-角色卡独立可调与绑定背景（10h）、归档与分类（5h）、知识库工作流清洗→提炼→入库→RAG（~21h）。
-建议顺序：1 → 4 → 3 → 2 → 5。
+自动折叠思考（collapseThinking）、计费实时估算 + 官方价格（0.5/2/8）、模型选择（v4.1-flash / v4-pro）。
+TDZ 踩坑：initialModel() 必须定义在 useSettings = create() 之前，否则 production 压缩构建崩在
+Cannot access \'ep\' before initialization。
 
 ### 验证
 
 pnpm type / pnpm build / ssembleRelease 通过。APK 47.82MB，1.1.0-alpha.1。
-截图 
-otes/n-lite.png（快速/专家胶囊）、
-otes/n-plus.png（下拉）。
 
 ## 构建
 
-- 调试：\pnpm android:apk\n- 正式：\pnpm android:release\n
+- 调试：pnpm android:apk
+- 正式：pnpm android:release

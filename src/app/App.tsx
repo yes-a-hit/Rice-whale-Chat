@@ -32,6 +32,7 @@ import { closeMobileSider } from '../components/sider/mobileSiderState.js'
 import { MobileSider, Sider } from '../components/sider/Sider.js'
 import { Onboarding } from '../components/onboarding/Onboarding.js'
 import { ImageDialog } from '../components/image/ImageDialog.js'
+import { ImageViewerHost } from '../components/files/ImageViewerHost.js'
 import styles from './App.module.css'
 
 export const App = () => {
@@ -190,6 +191,7 @@ export const App = () => {
       <SettingsDialog />
       <Toast />
       <ImageDialog />
+      <ImageViewerHost />
       {onboarded ? null : <Onboarding />}
     </>
   )
