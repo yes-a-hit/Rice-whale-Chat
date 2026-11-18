@@ -20,7 +20,7 @@ tmpl = """<!doctype html>
 <iframe src="/#preview"></iframe></body></html>
 """
 
-for theme in ("plain", "ink", "maid", "tech", "sumi"):
+for theme in ("plain", "ink", "maid", "tech", "sumi", "moon", "gyu"):
     io.open(base / f"_theme-{theme}.html", "w", encoding="utf-8", newline="\n").write(
         tmpl % {"theme": theme}
     )

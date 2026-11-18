@@ -81,8 +81,8 @@ export const THEMES: Theme[] = [
     nameKey: 'odsThemeGyu',
     descriptionKey: 'odsThemeGyuDesc',
     decoration: 'gyu',
+    // 还没有专属立绘：放 figure/out/gyu-mascot.webp 后把 welcome 加回来即可
     assets: {
-      welcome: 'gyu-mascot.webp',
       hungry: 'hungry.webp',
       logo: 'logo-128.webp',
     },

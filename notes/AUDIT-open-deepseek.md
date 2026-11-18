@@ -33,32 +33,52 @@
 - ASR 是否也本地化（faster-whisper）→ 待定。
 - 生图后端：ComfyUI API（现有）还是自带 OpenVINO SD 管线 → 待定。
 
-## 状态（2026-11-18 19:05）
+## 状态（2026-11-18 19:34）
 
-### 提示词分层（本轮）
+### 主题装饰底图（moss 出图）
 
-用户澄清：优先级不是二选一，而是**排序拼接**。落地为三层：
+用本机 ComfyUI + moss 模型批量出了六张装饰底图，`notes/run_moss.py` 驱动：
 
-1. **system 层**（每轮发）：`resolveSystemPrompt()` = `[systemPrompt, characterPrompt].join('\n\n')`，系统提示词在前、角色卡在后，都空才回落官方默认。
-2. **辅助层**（只注入一次）：`src/services/chat/promptLayers.ts` 的 `buildAuxBlock()` / `hasAuxInjected()` / `shouldInjectAux()`；`reply.ts` 的 `toRequestMessages()` 在历史里没有 `【规则层】` 标记时，插一对 user/assistant 消息。
-3. **历史后指令**：拼在辅助提示词之后，同一对消息里。
+| 主题 | 图 | 体积 |
+|---|---|---|
+| ink | 山水薄雾 + 竹叶 | 19 KB |
+| maid | 蕾丝边框 + 蝴蝶结 | 19 KB |
+| tech | 青蓝电路 HUD | 14 KB |
+| sumi | 毛笔 + 墨点 | 14 KB |
+| moon | 紫夜大月亮 | 13 KB |
+| gyu | 奶油底黑斑 | 4 KB |
 
-预装 `DEFAULT_AUX_PROMPT` = 反鲸八股六条（约 200 字，刻意压短省钱）。
-压缩上下文后规则消息被裁掉 → 标记消失 → 下次请求自动重注入（接口已就位，压缩功能本身还没做）。
+出图参数：1024×1024 → 缩 640、WEBP q80；8 步采样（25 步在 8G 显存上要 offload 太久）。
 
-设置 UI：扩展页新增「启用辅助提示词」开关 + 两个 textarea（辅助提示词带「恢复默认」、历史后指令）。
-截图 `notes/aux-ext2.png`。
+接线方式：图放 `src/app/themes/assets/decor-<id>.webp`，CSS 里
 
-文档：`docs/prompts.md`（三层结构图、注入判据、为什么这么省、修改位置）。
+```css
+--ods-decor: linear-gradient(rgba(255,255,255,0.86), rgba(255,255,255,0.92)),
+  url('./assets/decor-tech.webp');
+```
+
+第一层白色遮罩把底图压到「隐约可见」，透明度按图案强度分档（0.82 山水 / 0.86–0.90 通用 / 0.93–0.97 高对比）。
+`App.module.css` 的 `.frame` 加了 `background-size: cover; background-position: center`。
+
+**踩坑**：CSS 里写 `url('/media/x.webp')` 会被 rspack 当模块解析并报 `Module not found`。
+改放源码目录用相对路径，让打包器处理并加 hash。
+
+**踩坑**：ComfyUI 默认只读自己的 `models/`，Comfy Desktop 的模型在 `E:\Comfy-Desktop\ComfyUI-Shared\models`。
+写了 `extra_model_paths.yaml` 并用 `--extra-model-paths-config` 启动才认。另外 workflow 里写的
+`moss_image_sft_deband_int8_convrot` / `qwen3.5_9b_int8_convrot` / `flux2-vae` 本机没有，
+实际用的是 `moss_image_sft_turbo_int8_convrot` / `qwen3.5_9b_w4a8_gptq` / `flux2-vae_small`。
+
+工作流存档：`notes/moss-decor-workflow.json`；文档：`docs/themes.md` 第 6 节。
 
 ### 验证
 
-`pnpm type` / `pnpm build` / `assembleRelease` 通过。APK 6.63MB。
+`pnpm type` / `pnpm build` / `assembleRelease` 通过。APK 6.72MB。
+截图：`notes/dc-ink.png`、`dc-tech.png`、`dc-sumi.png`、`dc-maid.png`、`dc-moon.png`、`de-gyu.png`。
 
 ### 仍未完成
 
-- 上下文压缩本身（目前只有「压缩后重注入」的判断逻辑）
-- 月兔/奶牛/水墨主题立绘
+- 月兔/奶牛专属立绘（装饰有了，人物还是国风那张）
+- 上下文压缩本身
 - 本地 NPU 生图与本地 TTS 只有接口
 - 真机实测
 

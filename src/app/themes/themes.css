@@ -4,7 +4,8 @@
  * 约定：
  *   1. 只覆盖 --dsw-static-blue-* 主色阶，不改语义色、不改布局；
  *   2. 装饰通过 --ods-decor 变量交给 .frame 的 background-image，不额外插 DOM；
- *   3. 新增主题 = 一个 html[data-theme='<id>'] 块，配色 + 一行 --ods-decor。
+ *   3. 第一层是白色遮罩，把底图压到「隐约可见」，保证文字对比度；
+ *   4. 新增主题 = 一个 html[data-theme='<id>'] 块 + 一张 decor-<id>.webp。
  */
 
 /* ---------- 国风：青蓝水墨 ---------- */
@@ -19,12 +20,8 @@ html[data-theme='ink'] {
   --dsw-static-blue-600: #25606c;
   --dsw-static-blue-800: #1a4550;
   --dsw-static-blue-900: #12333c;
-  --ods-decor: radial-gradient(
-      120% 60% at 12% -10%,
-      rgba(53, 120, 133, 0.16),
-      transparent 60%
-    ),
-    radial-gradient(80% 50% at 90% 110%, rgba(26, 69, 80, 0.12), transparent 65%);
+  --ods-decor: linear-gradient(rgba(255, 255, 255, 0.84), rgba(255, 255, 255, 0.9)),
+    url('./assets/decor-ink.webp');
 }
 
 /* ---------- 经典女仆：深蓝白 ---------- */
@@ -39,12 +36,8 @@ html[data-theme='maid'] {
   --dsw-static-blue-600: #314571;
   --dsw-static-blue-800: #223050;
   --dsw-static-blue-900: #161f35;
-  --ods-decor: repeating-linear-gradient(
-      45deg,
-      rgba(49, 69, 113, 0.05) 0 6px,
-      transparent 6px 14px
-    ),
-    radial-gradient(100% 60% at 50% -20%, rgba(49, 69, 113, 0.14), transparent 60%);
+  --ods-decor: linear-gradient(rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.94)),
+    url('./assets/decor-maid.webp');
 }
 
 /* ---------- 科技：青蓝荧光 ---------- */
@@ -59,10 +52,8 @@ html[data-theme='tech'] {
   --dsw-static-blue-600: #00729f;
   --dsw-static-blue-800: #00506f;
   --dsw-static-blue-900: #00394f;
-  --ods-decor: linear-gradient(rgba(0, 144, 200, 0.12) 1px, transparent 1px) 0 0 / 100%
-      28px,
-    linear-gradient(90deg, rgba(0, 144, 200, 0.12) 1px, transparent 1px) 0 0 / 28px 100%,
-    radial-gradient(90% 50% at 80% 0%, rgba(18, 174, 232, 0.2), transparent 60%);
+  --ods-decor: linear-gradient(rgba(255, 255, 255, 0.86), rgba(255, 255, 255, 0.92)),
+    url('./assets/decor-tech.webp');
 }
 
 /* ---------- 水墨：墨黑 ---------- */
@@ -77,12 +68,8 @@ html[data-theme='sumi'] {
   --dsw-static-blue-600: #3e3c37;
   --dsw-static-blue-800: #232220;
   --dsw-static-blue-900: #131312;
-  --ods-decor: radial-gradient(
-      140% 70% at 20% -20%,
-      rgba(19, 19, 18, 0.16),
-      transparent 62%
-    ),
-    radial-gradient(90% 60% at 100% 100%, rgba(19, 19, 18, 0.12), transparent 60%);
+  --ods-decor: linear-gradient(rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0.9)),
+    url('./assets/decor-sumi.webp');
 }
 
 /* ---------- 月兔（Kimi）：米白淡紫 ---------- */
@@ -97,8 +84,8 @@ html[data-theme='moon'] {
   --dsw-static-blue-600: #654cad;
   --dsw-static-blue-800: #453178;
   --dsw-static-blue-900: #2e2150;
-  --ods-decor: radial-gradient(circle at 82% 12%, rgba(176, 152, 242, 0.22), transparent 34%),
-    radial-gradient(circle at 12% 88%, rgba(128, 100, 208, 0.14), transparent 40%);
+  --ods-decor: linear-gradient(rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.92)),
+    url('./assets/decor-moon.webp');
 }
 
 /* ---------- 奶牛（GLM）：黑白斑 ---------- */
@@ -113,7 +100,6 @@ html[data-theme='gyu'] {
   --dsw-static-blue-600: #2b5372;
   --dsw-static-blue-800: #1c3a51;
   --dsw-static-blue-900: #122636;
-  --ods-decor: radial-gradient(ellipse 42% 30% at 18% 18%, rgba(28, 58, 81, 0.14), transparent 60%),
-    radial-gradient(ellipse 34% 24% at 72% 62%, rgba(28, 58, 81, 0.1), transparent 62%),
-    radial-gradient(ellipse 26% 20% at 88% 22%, rgba(28, 58, 81, 0.08), transparent 60%);
+  --ods-decor: linear-gradient(rgba(255, 255, 255, 0.93), rgba(255, 255, 255, 0.97)),
+    url('./assets/decor-gyu.webp');
 }

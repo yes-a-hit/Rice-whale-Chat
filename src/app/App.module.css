@@ -6,6 +6,9 @@
   background-color: var(--dsw-alias-bg-base);
   /* 主题装饰：由 themes.css 里的 --ods-decor 提供，缺省无 */
   background-image: var(--ods-decor, none);
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
   background-attachment: local;
 }
 
