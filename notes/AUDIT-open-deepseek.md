@@ -33,43 +33,33 @@
 - ASR 是否也本地化（faster-whisper）→ 待定。
 - 生图后端：ComfyUI API（现有）还是自带 OpenVINO SD 管线 → 待定。
 
-## 状态（2026-11-18 18:52）
+## 状态（2026-11-18 19:05）
 
-### 图片全部转 WEBP
+### 提示词分层（本轮）
 
-`notes/to_webp.py`（质量 82、method 6，RGBA 保 alpha）：
+用户澄清：优先级不是二选一，而是**排序拼接**。落地为三层：
 
-```
-hungry.png   77 KB -> hungry.webp   51 KB
-logo-128.png 12 KB -> logo-128.webp  3 KB
-tech-mascot  510 KB -> 90 KB
-wait.png     57 KB -> wait.webp     49 KB
-welcome.png  88 KB -> welcome.webp  60 KB
-maid-mascot  新     -> 57 KB
-```
+1. **system 层**（每轮发）：`resolveSystemPrompt()` = `[systemPrompt, characterPrompt].join('\n\n')`，系统提示词在前、角色卡在后，都空才回落官方默认。
+2. **辅助层**（只注入一次）：`src/services/chat/promptLayers.ts` 的 `buildAuxBlock()` / `hasAuxInjected()` / `shouldInjectAux()`；`reply.ts` 的 `toRequestMessages()` 在历史里没有 `【规则层】` 标记时，插一对 user/assistant 消息。
+3. **历史后指令**：拼在辅助提示词之后，同一对消息里。
 
-`dist/media` 总计 856 KB → 312 KB。组件引用全部改成 `.webp`（`Welcome` / `Sider` / `Onboarding` / `AssistantMessage`）。
+预装 `DEFAULT_AUX_PROMPT` = 反鲸八股六条（约 200 字，刻意压短省钱）。
+压缩上下文后规则消息被裁掉 → 标记消失 → 下次请求自动重注入（接口已就位，压缩功能本身还没做）。
 
-### 主题体系
+设置 UI：扩展页新增「启用辅助提示词」开关 + 两个 textarea（辅助提示词带「恢复默认」、历史后指令）。
+截图 `notes/aux-ext2.png`。
 
-`src/app/themes/{types,registry}.ts` + `themes.css`，取代原 `skins.ts` 的 5 套配色（旧 id 自动回落 `plain`）。
-
-- 七个内置：`plain` 最简 / `ink` 国风 / `maid` 经典女仆 / `tech` 科技 / `sumi` 水墨 / `moon` 月兔 / `gyu` 奶牛。
-- 装饰走 `--ods-decor` 变量，由 `App.module.css` 的 `.frame` 拼到 `background-image` —— 不插 DOM、不挡点击。
-- 自动匹配 `matchTheme()`：先比 `models` 再比 `hosts`，子串匹配，不写正则。当前只拿得到 `apiBaseUrl`，所以用 host 判断：`moonshot` → 月兔，`bigmodel`/`zhipu` → 奶牛。
-- 设置项 `themeAuto`（默认关）；`selectTheme()` 里手动选择优先。
-- 素材：`maid-mascot.webp` 由 `logo.png` 去白底生成；`tech-mascot.webp` 由 `tech-plus.jpg` 裁上半身 + 阈值抠深色背景生成。`moon`/`gyu` 暂无立绘，回落到默认图。
-- 文档：`docs/themes.md`（配色变量清单、四步新增法、匹配规则、稳定性契约）。
+文档：`docs/prompts.md`（三层结构图、注入判据、为什么这么省、修改位置）。
 
 ### 验证
 
-`pnpm type` / `pnpm build` / `assembleRelease` 通过。截图：`notes/theme-tech.png`、`theme-maid.png`、`theme-sumi.png`。
-产物 `android/app/build/outputs/apk/release/app-release.apk`（`com.ricewhale.chat`，v1.0.0-alpha.1）。
+`pnpm type` / `pnpm build` / `assembleRelease` 通过。APK 6.63MB。
 
 ### 仍未完成
 
-- 月兔、奶牛两套主题缺立绘（水兔女郎 / 萝莉牛娘），素材槽已留
-- 本地 NPU 生图与本地 TTS 只有接口，需要原生插件
+- 上下文压缩本身（目前只有「压缩后重注入」的判断逻辑）
+- 月兔/奶牛/水墨主题立绘
+- 本地 NPU 生图与本地 TTS 只有接口
 - 真机实测
 
 ## 构建

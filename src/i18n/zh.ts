@@ -344,4 +344,11 @@ export const zh = {
   odsThemeMoonDesc: '米白淡紫，月兔与水兔女郎',
   odsThemeGyu: '奶牛（GLM）',
   odsThemeGyuDesc: '黑白奶牛斑，萝莉牛娘',
+  odsAuxEnabled: '启用辅助提示词',
+  odsAuxEnabledHint: '只在新会话第一条注入一次，之后随历史滚动；上下文被压缩后会重新注入',
+  odsAuxPrompt: '辅助提示词',
+  odsAuxPromptHint: '预装的是反鲸八股规则，可改成任意要求；越短越省钱',
+  odsTailInstruction: '历史后指令',
+  odsTailInstructionHint: '跟在辅助提示词后面，用于强制格式或收尾要求',
+  odsTailInstructionPlaceholder: '例如：回答控制在 300 字以内，先给结论',
 } as const

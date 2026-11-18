@@ -4,6 +4,7 @@ import { ApiError, streamMessage } from '../api/client.js'
 import type { ChatModel, CreateMessageRequest } from '../api/types.js'
 import { extractFileIds, getFileErrorCode, isRetryableApiError } from '../api/errors.js'
 import { cancelUpload, describeUploadError, uploadAttachment, useUploads } from '../attachments.js'
+import { buildAuxBlock } from './promptLayers.js'
 import { resolveSystemPrompt, useSettings } from '../settings.js'
 import { appendBranch, getVisibleMessages, normalizeSession, selectVersion } from './branches.js'
 import * as db from './db.js'
@@ -997,7 +998,8 @@ const streamReply = async (sessionId: string, initial: AssistantMessage, request
           prepared.question,
           prepared.prefix,
           initial.thinking ?? false,
-          latestReminder
+          latestReminder,
+          buildAuxBlock()
         )
         const events = streamMessage(
           useSettings.getState().apiKey ?? '',

@@ -64,6 +64,12 @@ type Settings = {
   maxOutputTokens: number | null
   /** 角色卡生成的提示词；与 systemPrompt 独立，二者同时生效 */
   characterPrompt: string
+  /** 辅助提示词（反鲸八股等）：会话首轮注入一次，随后随历史滚动 */
+  auxPrompt: string
+  /** 历史后指令：注入在辅助提示词之后，压缩上下文时再次注入 */
+  tailInstruction: string
+  /** 是否启用辅助层注入 */
+  auxEnabled: boolean
   /** 当前角色卡名字，仅用于界面展示 */
   characterName: string
   /** 朗读语速倍数 */
@@ -85,6 +91,8 @@ type Settings = {
 
 /** 官方默认系统提示词，与 chat-demo 一致 */
 export const DEFAULT_API_BASE_URL = 'https://api.deepseek.com'
+export const DEFAULT_AUX_PROMPT = '写作规则（优先级高于客套）：1. 不用「首先/其次/最后」「综上所述」「总而言之」这类三段式脚手架，直接给结论。2. 不用「不是…而是…」「不仅…而且」的对偶句凑节奏，一句话说完就停。3. 少用形容词与副词：不写「深刻地」「极大地」「至关重要」「赋能」「抓手」「闭环」。4. 不排比、不押韵、不堆破折号；句子长短交错。5. 具体优先：给数字、给例子、给名字，不写「很多」「各种各样」。6. 结尾不总结、不喊口号、不反问「你还有什么想了解的」。'
+
 export const DEFAULT_SYSTEM_PROMPT = '该助手为DeepSeek，由深度求索公司创造。'
 export const DEFAULT_SKIN = 'plain'
 export const DEFAULT_IMAGE_BASE_URL = 'https://api.openai.com/v1'
@@ -120,6 +128,9 @@ const KEYS = {
   imageModel: 'ods:image-model',
   imageProvider: 'ods:image-provider',
   characterPrompt: 'ods:character-prompt',
+  auxPrompt: 'ods:aux-prompt',
+  tailInstruction: 'ods:tail-instruction',
+  auxEnabled: 'ods:aux-enabled',
   characterName: 'ods:character-name',
   ttsRate: 'ods:tts-rate',
   ttsSystemVoice: 'ods:tts-system-voice',
@@ -277,6 +288,9 @@ export const useSettings = create<Settings>(() => ({
     imageModel: read(KEYS.imageModel) ?? DEFAULT_IMAGE_MODEL,
   imageProvider: read(KEYS.imageProvider) === 'local' ? 'local' : 'cloud',
   characterPrompt: read(KEYS.characterPrompt) ?? '',
+  auxPrompt: read(KEYS.auxPrompt) ?? DEFAULT_AUX_PROMPT,
+  tailInstruction: read(KEYS.tailInstruction) ?? '',
+  auxEnabled: read(KEYS.auxEnabled) !== 'false',
   characterName: read(KEYS.characterName) ?? '',
   ttsRate: initialTtsRate(),
   ttsSystemVoice: read(KEYS.ttsSystemVoice) ?? '',
@@ -346,6 +360,21 @@ export const setApiBaseUrl = (apiBaseUrl: string) => {
   const normalized = apiBaseUrl.trim().replace(/\/+$/, '') || DEFAULT_API_BASE_URL
   write(KEYS.apiBaseUrl, normalized)
   useSettings.setState({ apiBaseUrl: normalized })
+}
+
+export const setAuxPrompt = (auxPrompt: string) => {
+  write(KEYS.auxPrompt, auxPrompt)
+  useSettings.setState({ auxPrompt })
+}
+
+export const setTailInstruction = (tailInstruction: string) => {
+  write(KEYS.tailInstruction, tailInstruction)
+  useSettings.setState({ tailInstruction })
+}
+
+export const setAuxEnabled = (auxEnabled: boolean) => {
+  write(KEYS.auxEnabled, String(auxEnabled))
+  useSettings.setState({ auxEnabled })
 }
 
 export const setCharacterPrompt = (characterPrompt: string, characterName = '') => {
@@ -459,15 +488,11 @@ export const setImageModel = (imageModel: string) => {
 
 /**
  * 当前生效的系统提示词。
- * 系统提示词优先：填了系统提示词就只用它（角色卡不参与，避免两套设定打架）；
- * 系统提示词为空时才用角色卡；两者都空回落官方默认。
+ * 分层拼接：系统提示词在前，角色卡在后（顺序固定，后者是「人设补充」，不覆盖前者）；
+ * 两者都空时回落官方默认。
  */
 export const resolveSystemPrompt = (): string => {
   const { systemPrompt, characterPrompt } = useSettings.getState()
-  const global = systemPrompt.trim()
-  if (global) {
-    return global
-  }
-  const card = characterPrompt.trim()
-  return card || DEFAULT_SYSTEM_PROMPT
+  const parts = [systemPrompt.trim(), characterPrompt.trim()].filter(Boolean)
+  return parts.length > 0 ? parts.join('\n\n') : DEFAULT_SYSTEM_PROMPT
 }

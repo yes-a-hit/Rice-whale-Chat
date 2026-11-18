@@ -14,7 +14,11 @@ import {
   setImageEnabled,
   setImageModel,
   setSearch,
+  setAuxEnabled,
+  setAuxPrompt,
   setSendSafetyCheck,
+  setTailInstruction,
+  DEFAULT_AUX_PROMPT,
   setSamplingParam,
   setSkin,
   setThemeAuto,
@@ -125,6 +129,106 @@ const ApiBaseUrlSetting = () => {
       placeholder={DEFAULT_API_BASE_URL}
       onSave={setApiBaseUrl}
     />
+  )
+}
+
+const AuxPromptSetting = () => {
+  const t = useTranslate()
+  const auxPrompt = useSettings((state) => state.auxPrompt)
+  const tailInstruction = useSettings((state) => state.tailInstruction)
+  const auxEnabled = useSettings((state) => state.auxEnabled)
+  const [auxDraft, setAuxDraft] = useState(auxPrompt)
+  const [tailDraft, setTailDraft] = useState(tailInstruction)
+  useEffect(() => setAuxDraft(auxPrompt), [auxPrompt])
+  useEffect(() => setTailDraft(tailInstruction), [tailInstruction])
+  return (
+    <>
+      <SettingCell
+        label={t('odsAuxEnabled')}
+        description={t('odsAuxEnabledHint')}
+        status={null}
+        action={
+          <button
+            type="button"
+            role="switch"
+            aria-checked={auxEnabled}
+            className={clsx(styles.switch, auxEnabled && styles.switchOn)}
+            onClick={() => setAuxEnabled(!auxEnabled)}
+          >
+            <span className={styles.switchThumb} />
+          </button>
+        }
+      />
+      <SettingCell
+        label={t('odsAuxPrompt')}
+        description={t('odsAuxPromptHint')}
+        status={null}
+        stacked
+        action={
+          <div className={styles.column}>
+            <textarea
+              className={styles.textarea}
+              value={auxDraft}
+              rows={7}
+              placeholder={DEFAULT_AUX_PROMPT}
+              onChange={(event) => setAuxDraft(event.target.value)}
+            />
+            <div className={styles.buttonRow}>
+              <button
+                type="button"
+                className={styles.saveButton}
+                onClick={() => {
+                  setAuxPrompt(auxDraft)
+                  showToast(t('odsSaved'))
+                }}
+              >
+                {t('odsSave')}
+              </button>
+              <button
+                type="button"
+                className={styles.ghostButton}
+                onClick={() => {
+                  setAuxPrompt(DEFAULT_AUX_PROMPT)
+                  setAuxDraft(DEFAULT_AUX_PROMPT)
+                  showToast(t('odsSaved'))
+                }}
+              >
+                {t('odsReset')}
+              </button>
+            </div>
+          </div>
+        }
+      />
+      <SettingCell
+        label={t('odsTailInstruction')}
+        description={t('odsTailInstructionHint')}
+        status={null}
+        stacked
+        action={
+          <div className={styles.column}>
+            <textarea
+              className={styles.textarea}
+              value={tailDraft}
+              rows={3}
+              placeholder={t('odsTailInstructionPlaceholder')}
+              onChange={(event) => setTailDraft(event.target.value)}
+            />
+            <div className={styles.buttonRow}>
+              <button
+                type="button"
+                className={styles.saveButton}
+                onClick={() => {
+                  setTailInstruction(tailDraft)
+                  showToast(t('odsSaved'))
+                }}
+              >
+                {t('odsSave')}
+              </button>
+            </div>
+          </div>
+        }
+      />
+    </>
   )
 }
 
@@ -510,6 +614,7 @@ export const ExtSettings = () => (
     <GenerationSettings />
     <ApiBaseUrlSetting />
     <SystemPromptSetting />
+    <AuxPromptSetting />
     <CharacterCardSetting />
     <AppearanceSettings />
     <VoiceSettings />

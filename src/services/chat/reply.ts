@@ -14,6 +14,7 @@ import type {
   ReplyStatus,
   UserMessage,
 } from './types.js'
+import { hasAuxInjected } from './promptLayers.js'
 
 /**
  * 文件按 Files API 的 file_id（附件的 serverId）引用：图片用 image 块，其余用 document 块。
@@ -302,9 +303,20 @@ export const toRequestMessages = (
   question: UserMessage,
   prefix?: AssistantMessage,
   thinking = prefix?.thinking ?? false,
-  latestReminder?: string
+  latestReminder?: string,
+  auxBlock?: string
 ): MessageParam[] => {
   const messages: MessageParam[] = []
+  // 辅助层只注入一次：历史里没有规则标记就插一对消息，之后随历史滚动
+  const userTexts = history
+    .filter((message): message is UserMessage => message.role === 'user')
+    .map((message) => message.content ?? '')
+  if (auxBlock && !hasAuxInjected(userTexts)) {
+    messages.push(
+      { role: 'user', content: auxBlock },
+      { role: 'assistant', content: [{ type: 'text', text: '明白，按这套规则来。' }] }
+    )
+  }
   let previousReminder: string | undefined
   const appendReminder = (reminder: string | undefined) => {
     // 仅在当前分支首次出现或内容变化时插入快照；缺少快照的消息保持原有内容。

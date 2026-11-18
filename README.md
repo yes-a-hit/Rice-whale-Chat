@@ -118,6 +118,10 @@ android/                Capacitor 生成的原生工程
 
 主题是可扩展的：加一段 CSS 变量 + 一条注册项就行，格式与社区约定见 [docs/themes.md](docs/themes.md)。
 
+## 提示词分层
+
+三层注入：系统提示词 + 角色卡走 system（每轮发、顺序固定）；辅助提示词（预装反鲸八股）与历史后指令只在新会话首轮注入一次，随历史滚动，压缩后自动重注入。详见 [docs/prompts.md](docs/prompts.md)。
+
 ## 实验性玩法
 
 设置 → **实验**。这一组默认全关，开了也不保证跑得起来——本地推理在 Android WebView 里

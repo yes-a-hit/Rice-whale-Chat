@@ -353,4 +353,11 @@ export const en = {
   odsThemeMoonDesc: 'Cream and lilac',
   odsThemeGyu: 'Cow (GLM)',
   odsThemeGyuDesc: 'Black and white spots',
+  odsAuxEnabled: 'Inject auxiliary prompt',
+  odsAuxEnabledHint: 'Injected once at the first turn, then travels with history; re-injected after compression',
+  odsAuxPrompt: 'Auxiliary prompt',
+  odsAuxPromptHint: 'Ships with anti-AI-slop rules; shorter costs less',
+  odsTailInstruction: 'Post-history instruction',
+  odsTailInstructionHint: 'Appended after the auxiliary prompt, for format or closing constraints',
+  odsTailInstructionPlaceholder: 'e.g. Keep it under 300 words, lead with the conclusion',
 } satisfies Record<keyof typeof zh, string>
